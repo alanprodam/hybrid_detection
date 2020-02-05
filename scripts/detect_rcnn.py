@@ -30,15 +30,13 @@ from object_detection.utils import visualization_utils as vis_util
 font = cv2.FONT_HERSHEY_PLAIN
 
 # SET FRACTION OF GPU YOU WANT TO USE HERE
-GPU_FRACTION = 0.4
+GPU_FRACTION = 0.1
 
 # DISTANCE_FOCAL = 750
 DISTANCE_FOCAL = 700
 
-DIAMETER_LANDMARCK_M = 0.5
-
 MAX_NUMBER_OF_BOXES = 1
-MINIMUM_CONFIDENCE = 0.99
+#MINIMUM_CONFIDENCE = 0.8
 
 ######### Set model here ############
 MODEL_NAME =  'modelo_congelado'
@@ -85,8 +83,10 @@ class Detector:
         self.image_sub = rospy.Subscriber("image", Image, self.image_callback, queue_size=1, buff_size=2**24)
         self.sess = tf.Session(graph=detection_graph,config=config)
 
-        DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.5)
-        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~markerSize_RCNN'), DIAMETER_LANDMARCK_M, 0.5)
+        self.DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.5)
+        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.8)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~markerSize_RCNN'), self.DIAMETER_LANDMARCK_M, 0.5)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.8)
 
     def image_callback(self, data):
         objArray = Detection2DArray()
@@ -123,9 +123,9 @@ class Detector:
             np.squeeze(scores),
             category_index,
             max_boxes_to_draw=MAX_NUMBER_OF_BOXES,
-            min_score_thresh=MINIMUM_CONFIDENCE,
+            min_score_thresh= self.MINIMUM_CONFIDENCE,
             use_normalized_coordinates=True,
-            line_thickness=6)
+            line_thickness=3)
 
         objArray.detections =[]
         objArray.header=data.header
@@ -180,7 +180,7 @@ class Detector:
             pixelDiametro = obj.bbox.size_y
 
         #DIAMETER_LANDMARCK_M = 0.24 OR 0.5
-        metersDiametroLandmarck = DIAMETER_LANDMARCK_M
+        metersDiametroLandmarck = self.DIAMETER_LANDMARCK_M
 
         #DISTANCE_FOCAL = 750
         distFocus_real = DISTANCE_FOCAL
