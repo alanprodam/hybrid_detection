@@ -66,10 +66,13 @@ class Subscriber(object):
 
         # Publishers
         self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3)
-        self.odm_filter_pub = rospy.Publisher("odom_filter", Odometry)
+        self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
+        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
 
         # transform tf
-        tf_odom_to_drone = tf.TransformBroadcaster()
+        tf_hybrid_to_drone = tf.TransformBroadcaster()
+        tf_rcnn_to_drone = tf.TransformBroadcaster()
+
         Keyframe = 0
 
         rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN)
@@ -93,21 +96,32 @@ class Subscriber(object):
             # rospy.logdebug("------------------------")
             # rospy.logdebug("module_aru : %f", module_aru)
             # rospy.logdebug("module_rcnn : %f", module_rcnn)
+            
+            # rcnn = 0
+            if mat[2] == 0:
+                covNeural = 10
+                covAruco = 0.01*abs(self.kalman.x[2])+1
+                rospy.logdebug("*****Neural = 0 ou stoped!*****")
 
-            # mat[2] = aruco mat[5] = rcnn
-            if mat[2] != 0 and mat[5] != 0: 
+            # aruco = 0
+            elif mat[5] == 0: # or abs(mat[2]-mat[5])>0.5:
+                covNeural = (1.5/(abs(self.kalman.x[2])+1))+1
+                covAruco = 10
+                rospy.logdebug("*****aruco = 0 ou stoped!*****")
+
+            else: #mat[2] != 0 and mat[5] != 0: 
                 # greater neural error and lower aruco error at low height
                 covNeural = (3.5/(abs(self.kalman.x[2])+0.1))+1.5 #np.exp(abs(self.kalman.x[2])*0.5-1)
                 covAruco = 0.005*abs(self.kalman.x[2])+0.3
-            elif mat[2] == 0:
-                covNeural = 15
-                covAruco = 0.01*abs(self.kalman.x[2])+1
-            elif mat[5] == 0:
-                covNeural = (1.5/(abs(self.kalman.x[2])+1))+1
-                covAruco = 15
-            # elif mat[2] != 0 and abs(mat[2]-mat[5])>(0.1*mat[2]):
-            #     covNeural = 15
-            #     covAruco = 0.01*abs(self.kalman.x[2])+1
+                rospy.logdebug("*****all-run!*****")
+
+
+            # module_aru_ant = module_aru
+            # module_rcnn_ant = module_rcnn
+
+            # rospy.logdebug("------------------------")
+            # rospy.logdebug("module_aru_ant : %f", module_aru_ant)
+            # rospy.logdebug("module_rcnn_ant : %f", module_rcnn_ant)
 
             # set values of cov in R matrix
             arrayNeral = np.full((1, 3), covNeural, dtype=float)
@@ -115,9 +129,9 @@ class Subscriber(object):
             Zarray = np.concatenate((arrayNeral, arrayAruco), axis=None)
             self.kalman.R = np.diag(Zarray)
 
-            rospy.logdebug("------------------------")
             rospy.logdebug("arrayNeral : %f", covNeural)
             rospy.logdebug("arrayAruco : %f", covAruco)
+            rospy.logdebug("------------------------")
 
             self.kalman.predict()
             self.kalman.update(mat)
@@ -132,29 +146,47 @@ class Subscriber(object):
             # rospy.logdebug("kalman.sensor[1].y : %f", vec.y)
             # rospy.logdebug("kalman.sensor[1].z : %f", vec.z)
 
+            ##################################################################################
+
             hybrid_odom = Odometry()
             hybrid_odom.header.stamp = rospy.Time.now()
             hybrid_odom.header.frame_id = "hybrid_odom"
             hybrid_odom.header.seq = Keyframe
             hybrid_odom.child_frame_id = "odom"
 
-            # since all odometry is 6DOF we'll need a quaternion created from yaw
-            #odom_quat = tf.transformations.quaternion_from_euler(0, 0, 3)
-
             # set the position
             hybrid_odom.pose.pose = Pose(vec, self.OriAruco)
-            
-            tf_odom_to_drone.sendTransform(
+
+            tf_hybrid_to_drone.sendTransform(
                           (self.kalman.x[0],self.kalman.x[1],self.kalman.x[2]), 
                           (self.OriAruco.x,self.OriAruco.y,self.OriAruco.z,self.OriAruco.w), 
                           hybrid_odom.header.stamp, 
                           "hybrid_odom",
                           "odom") #world
+
+            ##################################################################################
+
+            rcnn_odom = Odometry()
+            rcnn_odom.header.stamp = rospy.Time.now()
+            rcnn_odom.header.frame_id = "rcnn_odom"
+            rcnn_odom.header.seq = Keyframe
+            rcnn_odom.child_frame_id = "odom"
+
+            # set the position
+            rcnn_odom.pose.pose = Pose(self.VecNeural, self.OriAruco)
+
+            tf_rcnn_to_drone.sendTransform(
+                          (self.VecNeural.x,self.VecNeural.y,self.VecNeural.z), 
+                          (self.OriAruco.x,self.OriAruco.y,self.OriAruco.z,self.OriAruco.w), 
+                          rcnn_odom.header.stamp, 
+                          "rcnn_odom",
+                          "odom") #world
             Keyframe += 1
 
             # publish the message
+            self.odom_filter_pub.publish(hybrid_odom)
+            self.odom_rcnn_pub.publish(rcnn_odom)
             self.pub_hibrid.publish(vec)
-            self.odm_filter_pub.publish(hybrid_odom)
 
             r.sleep()
 
@@ -175,48 +207,42 @@ class Subscriber(object):
             # align coordinate axis X
             self.VecNeural.x = (-1)*(objArray.detections[0].results[0].pose.pose.position.x)
             self.VecNeural.y = objArray.detections[0].results[0].pose.pose.position.y
-            self.VecNeural.z = objArray.detections[0].results[0].pose.pose.position.z
+            VecNeuralz_current = objArray.detections[0].results[0].pose.pose.position.z
             # rospy.logdebug("--------------------------------")
-            # rospy.logdebug("rcnn_pose.x (m): %f", self.VecNeural.x)
-            # rospy.logdebug("rcnn_pose.y (m): %f", self.VecNeural.y)
-            # rospy.logdebug("rcnn_pose.z (m): %f", self.VecNeural.z)
+            # rospy.logdebug("rcnn_pose.x (m): %f", VecNeuralx_current)
+            # rospy.logdebug("rcnn_pose.y (m): %f", VecNeuraly_current)
+            # rospy.logdebug("rcnn_pose.z (m): %f", VecNeuralz_current)
 
             # Filter list_z
-            if len(self.list_z) < 30:
-                self.list_z.append(self.VecNeural.z)
+            if len(self.list_z) < 20:
+                self.list_z.append(VecNeuralz_current)
                 # rospy.logdebug("--------------------------------")
                 # rospy.logdebug('Size of list: %f',len(self.list_z))
                 # rospy.logdebug('****Incomplete List')
-                self.VecNeural_z_ant = self.VecNeural.z
+                self.VecNeural_z_ant = VecNeuralz_current
             else:
-                diff = abs(self.VecNeural.z-self.VecNeural_z_ant)
+                diff = abs(VecNeuralz_current-self.VecNeural_z_ant)
                 rospy.logdebug('------------------------------')
                 # rospy.logdebug('Diff points: %f',diff)
 
                 if diff>1 and self.VecNeural_z_ant != 0:
-                    self.VecNeural_z_ant = self.VecNeural.z
-                    self.VecNeural.z = 0
+                    self.VecNeural_z_ant = VecNeuralz_current
+                    # self.VecNeural.z = 0
                     # rospy.logdebug('------------------------------')
                     # rospy.logdebug('****No capture!')
 
                 else:
-                    self.list_z.append(self.VecNeural.z)
+                    self.list_z.append(VecNeuralz_current)
                     del self.list_z[0]
-                    self.VecNeural.z = sum(self.list_z)/len(self.list_z)
+                    VecNeuralz_current = sum(self.list_z)/len(self.list_z)
+                    self.VecNeural.z = VecNeuralz_current
 
                     # rospy.logdebug('------------------------------')
                     # rospy.logdebug('Size of list_z:  %f',len(self.list_z))
                     # rospy.logdebug('Sum List list_z: %f',sum(self.list_z))
                     # rospy.logdebug('Med List list_z: %f',self.VecNeural.z)
 
-                    self.VecNeural_z_ant = self.VecNeural.z
-
-                
-
-            # if sum(self.list_z) == 0:
-    
-            #     self.list_z = []
-
+                    self.VecNeural_z_ant = VecNeuralz_current
 
     def callbackPoseAruco(self, data):
         # recive data
