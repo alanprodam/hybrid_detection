@@ -84,9 +84,9 @@ class Detector:
         self.sess = tf.Session(graph=detection_graph,config=config)
 
         self.DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.5)
-        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.8)
+        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.99)
         rospy.logdebug("%s is %s default %f", rospy.resolve_name('~markerSize_RCNN'), self.DIAMETER_LANDMARCK_M, 0.5)
-        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.8)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.99)
 
     def image_callback(self, data):
         objArray = Detection2DArray()

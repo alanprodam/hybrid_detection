@@ -12,7 +12,7 @@
   <arg name="markerSizeRCNN"    default="0.50"/>    <!-- in m -->
   <arg name="distancefocal"     default="750"/>  
   <arg name="maxnumberofboxes"  default="1"/>    
-  <arg name="minimumconfidence" default="0.99"/>    <!-- in % -->
+  <arg name="minimumconfidence" default="0.85"/>    <!-- in % -->
 
   <node pkg="aruco_ros" type="double" name="aruco_double">
       <remap from="/camera_info" to="/bebop/camera_info" />
