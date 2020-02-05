@@ -32,6 +32,7 @@ font = cv2.FONT_HERSHEY_PLAIN
 # SET FRACTION OF GPU YOU WANT TO USE HERE
 GPU_FRACTION = 0.4
 
+# DISTANCE_FOCAL = 750
 DISTANCE_FOCAL = 750
 
 DIAMETER_LANDMARCK_M = 0.5
@@ -182,10 +183,15 @@ class Detector:
         #DIAMETER_LANDMARCK_M = 0.24 OR 0.5
         metersDiametroLandmarck = DIAMETER_LANDMARCK_M
 
-        #DISTANCE_FOCAL = 490
+        #DISTANCE_FOCAL = 750
         distFocus_real = DISTANCE_FOCAL
 
         altura = float((metersDiametroLandmarck * distFocus_real) / pixelDiametro)
+
+        # Ajust
+        # if altura > 1.5:
+        #     distFocus_real = (DISTANCE_FOCAL - 100)
+        #     altura = float((metersDiametroLandmarck * distFocus_real) / pixelDiametro)
 
         # rospy.loginfo("--------------------------------")
         # rospy.loginfo("Diametro Marcador Real:  %f", metersDiametroLandmarck)

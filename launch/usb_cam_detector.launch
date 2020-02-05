@@ -28,7 +28,7 @@
       <param name="corner_refinement" value="$(arg corner_refinement)" />
   </node>
 
-	<node pkg= "tensorflow_object_detector" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
+	<node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
     <remap from="/image" to="/cv_camera/image_rect_color"/>  <!-- /cv_camera/image_rect_color or /bebop/image_raw -->
     <param name="markerSize_RCNN" value="$(arg markerSizeRCNN)"/>
   </node> 

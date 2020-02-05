@@ -29,7 +29,7 @@
       <param name="corner_refinement" value="$(arg corner_refinement)" />
   </node>
 
-  <node pkg= "tensorflow_object_detector" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
+  <node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
     <remap from="image" to="/bebop/image_raw"/>
     <param name="markerSize_RCNN" value="$(arg markerSizeRCNN)"/>
     <param name="distance_focal" value="$(arg distancefocal)"/>
@@ -37,7 +37,7 @@
     <param name="minimum_confidence" value="$(arg minimumconfidence)"/>
   </node>
 
-  <!-- <node pkg= "tensorflow_object_detector" name="filter" type="fusion_filter_kalman.py"  output="screen"/> -->
+  <node pkg= "hybrid_detection" name="filter" type="fusion_filter_kalman.py"  output="screen"/>
 
   <!-- <node pkg="rostopic" type="rostopic" name="position" args="echo /kalman/hybrid" output="screen"/> -->
 
@@ -51,6 +51,6 @@
       <param name="marker_size"        value="$(arg markerSize)"/>
   </node> -->
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find tensorflow_object_detector)/config/rviz_config_fusion.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hybrid_detection)/config/rviz_config_fusion.rviz"/>
 
 </launch>
