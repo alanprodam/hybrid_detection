@@ -61,7 +61,12 @@ class Subscriber(object):
         self.VecAruco = Vector3()
         self.OriAruco = Quaternion(0,0,0,1)
 
+        self.list_x = []
+        self.list_y = []
         self.list_z = []
+
+        self.VecNeural_x_ant = 0
+        self.VecNeural_y_ant = 0
         self.VecNeural_z_ant = 0
 
         # Publishers
@@ -202,47 +207,116 @@ class Subscriber(object):
         # rcnn_pose
         objArray = data
         # rospy.logdebug(" lenth objArray.detections: %f", len(objArray.detections))
+        size_filter = 20
         
         if len(objArray.detections) != 0:
             # align coordinate axis X
-            self.VecNeural.x = (-1)*(objArray.detections[0].results[0].pose.pose.position.x)
-            self.VecNeural.y = objArray.detections[0].results[0].pose.pose.position.y
-            VecNeuralz_current = objArray.detections[0].results[0].pose.pose.position.z
+            neuralx_current = (-1)*(objArray.detections[0].results[0].pose.pose.position.x)
+            neuraly_current = objArray.detections[0].results[0].pose.pose.position.y
+            neuralz_current = objArray.detections[0].results[0].pose.pose.position.z
             # rospy.logdebug("--------------------------------")
             # rospy.logdebug("rcnn_pose.x (m): %f", VecNeuralx_current)
             # rospy.logdebug("rcnn_pose.y (m): %f", VecNeuraly_current)
-            # rospy.logdebug("rcnn_pose.z (m): %f", VecNeuralz_current)
+            # rospy.logdebug("rcnn_pose.z (m): %f", neuralz_current)
 
-            # Filter list_z
-            if len(self.list_z) < 20:
-                self.list_z.append(VecNeuralz_current)
+            ##############################################################
+
+            # Filter list_x
+            if len(self.list_x) < size_filter:
+                self.list_x.append(neuralx_current)
                 # rospy.logdebug("--------------------------------")
-                # rospy.logdebug('Size of list: %f',len(self.list_z))
+                # rospy.logdebug('Size of list: %f',len(self.list_x))
                 # rospy.logdebug('****Incomplete List')
-                self.VecNeural_z_ant = VecNeuralz_current
+                self.VecNeural_x_ant = neuralx_current
             else:
-                diff = abs(VecNeuralz_current-self.VecNeural_z_ant)
+                diff = abs(neuralx_current-self.VecNeural_x_ant)
+                # rospy.logdebug('------------------------------')
+                # rospy.logdebug('Diff points: %f',diff)
+
+                if diff>0.4 and self.VecNeural_x_ant != 0:
+                    self.VecNeural_x_ant = neuralx_current
+                    # self.VecNeural.x = 0
+                    # rospy.logdebug('------------------------------')
+                    # rospy.logdebug('****No capture!')
+
+                else:
+                    self.list_x.append(neuralx_current)
+                    del self.list_x[0]
+                    neuralx_current = sum(self.list_x)/len(self.list_x)
+                    self.VecNeural.x = neuralx_current
+
+                    # rospy.logdebug('------------------------------')
+                    # rospy.logdebug('Size of list_x:  %f',len(self.list_x))
+                    # rospy.logdebug('Sum List list_x: %f',sum(self.list_x))
+                    # rospy.logdebug('Med List list_x: %f',self.VecNeural.x)
+
+                    self.VecNeural_x_ant = neuralx_current
+
+            ##############################################################
+
+            # Filter list_y
+            if len(self.list_y) < size_filter:
+                self.list_y.append(neuraly_current)
+                # rospy.logdebug("--------------------------------")
+                # rospy.logdebug('Size of list: %f',len(self.list_y))
+                # rospy.logdebug('****Incomplete List')
+                self.VecNeural_y_ant = neuraly_current
+            else:
+                diff = abs(neuraly_current-self.VecNeural_y_ant)
                 rospy.logdebug('------------------------------')
                 # rospy.logdebug('Diff points: %f',diff)
 
-                if diff>1 and self.VecNeural_z_ant != 0:
-                    self.VecNeural_z_ant = VecNeuralz_current
+                if diff>0.4 and self.VecNeural_y_ant != 0:
+                    self.VecNeural_y_ant = neuraly_current
+                    # self.VecNeural.y = 0
+                    # rospy.logdebug('------------------------------')
+                    # rospy.logdebug('****No capture!')
+
+                else:
+                    self.list_y.append(neuraly_current)
+                    del self.list_y[0]
+                    neuraly_current = sum(self.list_y)/len(self.list_y)
+                    self.VecNeural.y = neuraly_current
+
+                    # rospy.logdebug('------------------------------')
+                    # rospy.logdebug('Size of list_y:  %f',len(self.list_y))
+                    # rospy.logdebug('Sum List list_y: %f',sum(self.list_y))
+                    # rospy.logdebug('Med List list_y: %f',self.VecNeural.y)
+
+                    self.VecNeural_y_ant = neuraly_current
+
+            ##############################################################
+
+            # Filter list_z
+            if len(self.list_z) < size_filter:
+                self.list_z.append(neuralz_current)
+                # rospy.logdebug("--------------------------------")
+                # rospy.logdebug('Size of list: %f',len(self.list_z))
+                # rospy.logdebug('****Incomplete List')
+                self.VecNeural_z_ant = neuralz_current
+            else:
+                diff = abs(neuralz_current-self.VecNeural_z_ant)
+                # rospy.logdebug('------------------------------')
+                # rospy.logdebug('Diff points: %f',diff)
+
+                if diff>0.5 and self.VecNeural_z_ant != 0:
+                    self.VecNeural_z_ant = neuralz_current
                     # self.VecNeural.z = 0
                     # rospy.logdebug('------------------------------')
                     # rospy.logdebug('****No capture!')
 
                 else:
-                    self.list_z.append(VecNeuralz_current)
+                    self.list_z.append(neuralz_current)
                     del self.list_z[0]
-                    VecNeuralz_current = sum(self.list_z)/len(self.list_z)
-                    self.VecNeural.z = VecNeuralz_current
+                    neuralz_current = sum(self.list_z)/len(self.list_z)
+                    self.VecNeural.z = neuralz_current
 
                     # rospy.logdebug('------------------------------')
                     # rospy.logdebug('Size of list_z:  %f',len(self.list_z))
                     # rospy.logdebug('Sum List list_z: %f',sum(self.list_z))
                     # rospy.logdebug('Med List list_z: %f',self.VecNeural.z)
 
-                    self.VecNeural_z_ant = VecNeuralz_current
+                    self.VecNeural_z_ant = neuralz_current
 
     def callbackPoseAruco(self, data):
         # recive data

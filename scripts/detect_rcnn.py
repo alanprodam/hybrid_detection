@@ -134,8 +134,7 @@ class Detector:
         if len(objects) > 0:
             for i in range(len(objects)):
                 objArray.detections.append(self.object_predict(objects[i],data.header,image_np,cv_image))
-                #call fuction to return z of drone
-                #z_drone = self.distanceLandmarck(objects[i],cv_image)
+
 
         self.object_pub.publish(objArray)
 
@@ -187,11 +186,6 @@ class Detector:
         distFocus_real = DISTANCE_FOCAL
 
         altura = float((metersDiametroLandmarck * distFocus_real) / pixelDiametro)
-
-        # Ajust
-        # if altura > 1.5:
-        #     distFocus_real = (DISTANCE_FOCAL - 100)
-        #     altura = float((metersDiametroLandmarck * distFocus_real) / pixelDiametro)
 
         # rospy.loginfo("--------------------------------")
         # rospy.loginfo("Diametro Marcador Real:  %f", metersDiametroLandmarck)
