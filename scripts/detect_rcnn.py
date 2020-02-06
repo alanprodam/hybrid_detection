@@ -33,10 +33,9 @@ font = cv2.FONT_HERSHEY_PLAIN
 GPU_FRACTION = 0.1
 
 # DISTANCE_FOCAL = 750
-DISTANCE_FOCAL = 700
+# DISTANCE_FOCAL = 700
 
 MAX_NUMBER_OF_BOXES = 1
-#MINIMUM_CONFIDENCE = 0.8
 
 ######### Set model here ############
 MODEL_NAME =  'modelo_congelado'
@@ -85,8 +84,11 @@ class Detector:
 
         self.DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.5)
         self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.99)
+        self.DISTANCE_FOCAL = rospy.get_param('~distance_focal', 700)
+
         rospy.logdebug("%s is %s default %f", rospy.resolve_name('~markerSize_RCNN'), self.DIAMETER_LANDMARCK_M, 0.5)
         rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.99)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~distance_focal'), self.DISTANCE_FOCAL, 700)
 
     def image_callback(self, data):
         objArray = Detection2DArray()
@@ -183,7 +185,7 @@ class Detector:
         metersDiametroLandmarck = self.DIAMETER_LANDMARCK_M
 
         #DISTANCE_FOCAL = 750
-        distFocus_real = DISTANCE_FOCAL
+        distFocus_real = self.DISTANCE_FOCAL
 
         altura = float((metersDiametroLandmarck * distFocus_real) / pixelDiametro)
 
