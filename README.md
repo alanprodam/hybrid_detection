@@ -14,8 +14,8 @@ Version | ROS Distro | Operating System
 ## Install dependencies and follow the installation instructions.
 
 - [x] ROS Kinetic-devel: [ROS](http://wiki.ros.org/kinetic/Installation/Ubuntu).
-- [x] Aruco ROS: ](https://github.com/alanprodam/aruco_ros.git).
-- [x] Vision msgs: ](https://github.com/Kukanani/vision_msgs.git).
+- [x] Aruco ROS:[githubLink](https://github.com/alanprodam/aruco_ros.git).
+- [x] Vision msgs: [githubLink](https://github.com/Kukanani/vision_msgs.git).
 
 
 In order to perform an accurate take-off and land of the Bebop 2, we are using ArUco Markers based on image processing. Firstly, we used a Parrot Bebop 2 model as drone provided by Sphinx-Guide to simulate an environment in Gazebo. The main idea is to use the Aruco Tag to send commands to Bebop 2 to take-off and land autonomously. After simulation, it will be necessary to implement in the real environment using a real Bebop 2.
