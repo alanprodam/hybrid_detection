@@ -103,32 +103,48 @@ bebop_autonomy is a ROS driver for Parrot Bebop 1.0 and 2.0 drones (quadrocopter
 ### If you don't have ROS workspace yet you can do so by ###
 
 ```
-mkdir -p ~/bebop_ws/src && cd ~/bebop_ws
+mkdir -p ~/landing_ws/src && cd ~/landing_ws
 catkin init
 git clone https://github.com/AutonomyLab/bebop_autonomy.git src/bebop_autonomy
-# Update rosdep database and install dependencies (including parrot_arsdk)
+git clone https://github.com/Kukanani/vision_msgs.git
+git clone git@github.com:alanprodam/aruco_ros.git
+```
+
+### Update rosdep database and install dependencies (including parrot_arsdk)
+
+```
 rosdep update
 rosdep install --from-paths src -i
-# Build the workspace
+```
+
+### Build the workspace
+
+```
 catkin build
 ```
 
 ### Get the simulator and additional dependencies ###
 ```
-cd ~/bebop_ws/src
-git clone https://github.com/cesarhcq/control_bebop_teleop.git
+cd ~/landing_ws/src
+git clone git@github.com:alanprodam/hybrid_detection.git
+
+or
+
+git clone https://github.com/alanprodam/hybrid_detection.git
 ```
 
 ```
- bebop_ws
+ landing_ws
    |
    |---> build
    |---> devel
    |---> logs
    |---> src
 	 |
+         |---> aruco_ros
          |---> bebop_autonomy
-         |---> control_bebop_teleop
+         |---> hybrid_detection
+         |---> vision_msgs
 ```
 
 Just follow the wiki installation for Parrot 1.0 & 2.0
@@ -238,7 +254,7 @@ Change the parameter `<stole_interface>` according to your ifconfig result. In o
 Change the IP `<launch> = bebop_node.launch` according to IP drone. In case of simulation, you should use `default="10.202.0.1"`
 
 ```
-subl ~bebop_ws/src/bebop_autonomy/bebop_driver/launch/bebop_node.launch
+subl ~/landing_ws/src/bebop_autonomy/bebop_driver/launch/bebop_node.launch
 ```
 ```
 <?xml version="1.0"?>
@@ -264,7 +280,7 @@ subl ~bebop_ws/src/bebop_autonomy/bebop_driver/launch/bebop_node.launch
 If you need, you can chance of camera calibration file, the first file is bebop2 with 856x480:
 
 ```
-subl ~bebop_ws/src/bebop_autonomy/bebop_driver/data/bebop2_camera_calib.yaml
+subl ~/landing_ws/src/hybrid_detection/bebop_driver/data/bebop2_camera_calib.yaml
 ```
 ```
 image_width: 856
@@ -292,7 +308,7 @@ projection_matrix:
 The second file is bebop1 with 640x368:
 
 ```
-subl ~bebop_ws/src/bebop_autonomy/bebop_driver/data/bebop1_camera_calib.yaml
+subl ~/landing_ws/src/hybrid_detection/bebop_driver/data/bebop1_camera_calib.yaml
 ```
 ```
 image_width: 640
@@ -332,51 +348,67 @@ PONG
 Check the IP with `iwconfig`:
 
 ```
-cd ~/bebop_ws
+cd ~/landing_ws
 
 source devel/setup.bash
 
-sphinx src/control_bebop_teleop/world/aruco.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
+sphinx ~/landing_ws/src/control_bebop_teleop/world/aruco.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
 ```
 
 If you wanna use another world `svo_world.world`:
 
 ```
-sphinx src/control_bebop_teleop/world/svo_world.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
+sphinx ~/landing_ws/src/control_bebop_teleop/world/svo_world.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
 ```
 
 If you wanna find and change the Big_box with ArUco, if you do not have the big_box, move the file to `.gazebo/models/...`:
 
 ```
-/bebop_ws/src/control_bebop_teleop/world/big_box
+/hybrid_detection/src/control_bebop_teleop/world/big_box
 
-/home/<user>/.gazebo/models/big_box
+~/.gazebo/models/big_box
 ```
 
 In case of low GPU, you should put this command
 ```
-sphinx src/control_bebop_teleop/world/aruco_big_box.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone::low_gpu=true
+sphinx ~/landing_ws/src/hybrid_detection/world/aruco_big_box.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone::low_gpu=true
 
-sphinx src/control_bebop_teleop/world/aruco_big_box.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone::with_front_cam=false
+sphinx ~/landing_ws/src/hybrid_detection/world/aruco_big_box.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone::with_front_cam=false
 ```
 The world will be executed.
 
 After that, open another terminal and execute the following command in your `catkin workspace`.
 
 ```
-roslaunch bebop_driver bebop_node.launch
+roslaunch hybrid_detection bebop_node.launch
 ```
 
 In another terminal, execute:
 
 ```
-rosrun control_bebop_teleop image_sub.py
+roslaunch hybrid_detection drone_cam_detector.launch
+
+or
+
+roslaunch hybrid_detection usb_cam_detector.launch
+```
+
+Or if you wanna make everything separate, open another terminal and, execute:
+
+```
+roslaunch aruco_ros aruco_double_bebop.launch
 ```
 
 In another terminal, execute:
 
 ```
-rosrun control_bebop_teleop landing_pub.py
+rosrun hybrid_detection detect_rcnn.py
+```
+
+In another terminal, execute:
+
+```
+rosrun hybrid_detection fusion_filter_kalman.py
 ```
 
 #### Play Dataset Experimental in Real World ####
@@ -390,9 +422,9 @@ roscore
 Start RVIZ (Robot Visualizer) in a new console:
 
 ```
-cd ~/bebop_ws
+cd ~/landing_ws
 
-rosrun rviz rviz -d src/control_bebop_teleop/rviz_config_aruco.rviz
+rosrun rviz rviz -d ~/landing_ws/src/hybrid_detection/rviz/rviz_config_fusion.rviz
 ```
 
 Open a new console and change to the directory where you have downloaded the example dataset. Then type:

@@ -9,7 +9,10 @@
   <arg name="marker2_frame"     default="tag_2" />
   <arg name="corner_refinement" default="SUBPIX"/>
 
-  <arg name="markerSizeRCNN"    default="0.50"/>    <!-- in m -->
+  <arg name="markerSizeRCNN"    default="0.60"/>    <!-- in m -->
+  <arg name="distancefocal"     default="700"/>  
+  <arg name="maxnumberofboxes"  default="1"/>    
+  <arg name="minimumconfidence" default="0.85"/>    <!-- in % -->
 
 <!--   <node pkg="tf" type="static_transform_publisher" name="tf_bebop_ned_to_enu" args="10 0 0 0 3.1415 drone_base drone_base2 100" /> -->
 
