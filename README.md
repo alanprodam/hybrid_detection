@@ -1,4 +1,4 @@
-Autonomous Take-off and Land - ArUco
+Autonomous Take-off and Land - Hybrid Marker Detection Method (ArUco+CNN)
 ====================================
 
 ### Change Log ###
@@ -7,8 +7,15 @@ Autonomous Take-off and Land - ArUco
 
 #### Build and tested ###
 
-OS: Ubuntu 16.04 - xenial
-ROS version: Kinetic
+Version | ROS Distro | Operating System
+------------ | ------------- | ------------
+1.0 | Kinetic Kame | Ubuntu 16.04 LTS (Xenial)
+
+## Install dependencies and follow the installation instructions.
+
+- [x] ROS Kinetic-devel: [ROS](http://wiki.ros.org/kinetic/Installation/Ubuntu).
+- [x] Aruco ROS: ](https://github.com/alanprodam/aruco_ros.git).
+- [x] Vision msgs: ](https://github.com/Kukanani/vision_msgs.git).
 
 
 In order to perform an accurate take-off and land of the Bebop 2, we are using ArUco Markers based on image processing. Firstly, we used a Parrot Bebop 2 model as drone provided by Sphinx-Guide to simulate an environment in Gazebo. The main idea is to use the Aruco Tag to send commands to Bebop 2 to take-off and land autonomously. After simulation, it will be necessary to implement in the real environment using a real Bebop 2.
@@ -110,7 +117,7 @@ mkdir -p ~/landing_ws/src && cd ~/landing_ws
 catkin init
 git clone https://github.com/AutonomyLab/bebop_autonomy.git src/bebop_autonomy
 git clone https://github.com/Kukanani/vision_msgs.git
-git clone git@github.com:alanprodam/aruco_ros.git
+git clone https://github.com/alanprodam/aruco_ros.git
 ```
 
 ### Update rosdep database and install dependencies (including parrot_arsdk)
@@ -129,10 +136,6 @@ catkin build
 ### Get the simulator and additional dependencies ###
 ```
 cd ~/landing_ws/src
-git clone git@github.com:alanprodam/hybrid_detection.git
-
-or
-
 git clone https://github.com/alanprodam/hybrid_detection.git
 ```
 
