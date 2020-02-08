@@ -14,6 +14,9 @@ ROS version: Kinetic
 In order to perform an accurate take-off and land of the Bebop 2, we are using ArUco Markers based on image processing. Firstly, we used a Parrot Bebop 2 model as drone provided by Sphinx-Guide to simulate an environment in Gazebo. The main idea is to use the Aruco Tag to send commands to Bebop 2 to take-off and land autonomously. After simulation, it will be necessary to implement in the real environment using a real Bebop 2.
 
 
+![AutonomousLanding](/pictures/landing_1.jpg)
+
+
 We use the kinetic installation from: http://wiki.ros.org/kinetic/Installation. Do not forget to install wstool http://wiki.ros.org/wstool
 
 If you are using a Parrot Bebop 1 or 2 model, you'll need to install the ARDroneSDK3 API.
