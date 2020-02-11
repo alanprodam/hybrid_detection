@@ -386,7 +386,7 @@ The world will be executed.
 After that, open another terminal and execute the following command in your `catkin workspace`.
 
 ```
-roslaunch hybrid_detection bebop_node.launch
+roslaunch bebop_driver bebop_node.launch
 ```
 
 In another terminal, execute:

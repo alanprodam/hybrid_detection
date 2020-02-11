@@ -51,6 +51,6 @@
       <param name="marker_size"        value="$(arg markerSize)"/>
   </node> -->
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hybrid_detection)/config/rviz_config_fusion.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hybrid_detection)/rviz/rviz_config_fusion.rviz"/>
 
 </launch>
