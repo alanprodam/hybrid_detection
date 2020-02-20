@@ -92,13 +92,13 @@ class Subscriber(object):
 
         # transform tf
         tf_hybrid_to_drone = tf.TransformBroadcaster()
-
+        
         Keyframe = 0
-
+        
         rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN)
         rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco)
-
-        r = rospy.Rate(10.0)
+        
+        r = rospy.Rate(100.0)
         while not rospy.is_shutdown():
             neural = [self.VecNeural.x, self.VecNeural.y, self.VecNeural.z]
             aruco = [self.VecAruco.x, self.VecAruco.y, self.VecAruco.z]
@@ -170,39 +170,39 @@ class Subscriber(object):
             # rospy.logdebug("kalman.sensor[1].z : %f", vec.z)
 
             ##################################################################################
+            if dt_aruco < 0.1 or dt_rcnn < 0.1:
+                hybrid_odom = Odometry()
+                hybrid_odom.header.stamp = rospy.Time.now()
+                hybrid_odom.header.frame_id = "hybrid_odom"
+                hybrid_odom.header.seq = Keyframe
+                hybrid_odom.child_frame_id = "odom"
 
-            hybrid_odom = Odometry()
-            hybrid_odom.header.stamp = rospy.Time.now()
-            hybrid_odom.header.frame_id = "hybrid_odom"
-            hybrid_odom.header.seq = Keyframe
-            hybrid_odom.child_frame_id = "odom"
+                explicit_quat = [self.OriAruco.x, self.OriAruco.y, self.OriAruco.z, self.OriAruco.w]
+                euler = tf.transformations.euler_from_quaternion(explicit_quat)
+                # roll = euler[0]
+                # pitch = euler[1]
+                yaw = euler[2]
 
-            explicit_quat = [self.OriAruco.x, self.OriAruco.y, self.OriAruco.z, self.OriAruco.w]
-            euler = tf.transformations.euler_from_quaternion(explicit_quat)
-            # roll = euler[0]
-            # pitch = euler[1]
-            yaw = euler[2]
+                # # since all odometry is 6DOF we'll need a quaternion created from yaw
+                odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
 
-            # # since all odometry is 6DOF we'll need a quaternion created from yaw
-            odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
+                # set the position
+                hybrid_odom.pose.pose = Pose(vec, Quaternion(*odom_quat))
 
-            # set the position
-            hybrid_odom.pose.pose = Pose(vec, Quaternion(*odom_quat))
+                tf_hybrid_to_drone.sendTransform(
+                              (self.kalman.x[0],self.kalman.x[1],self.kalman.x[2]), 
+                              odom_quat, 
+                              hybrid_odom.header.stamp, 
+                              "hybrid_odom",
+                              "odom") #world
 
-            tf_hybrid_to_drone.sendTransform(
-                          (self.kalman.x[0],self.kalman.x[1],self.kalman.x[2]), 
-                          odom_quat, 
-                          hybrid_odom.header.stamp, 
-                          "hybrid_odom",
-                          "odom") #world
+                ##################################################################################
 
-            ##################################################################################
+                Keyframe += 1
 
-            Keyframe += 1
-
-            # publish the message
-            self.odom_filter_pub.publish(hybrid_odom)
-            self.pub_hibrid.publish(vec)
+                # publish the message
+                self.odom_filter_pub.publish(hybrid_odom)
+                self.pub_hibrid.publish(vec)
 
             r.sleep()
 
@@ -218,7 +218,7 @@ class Subscriber(object):
         # rcnn_pose
         objArray = data
         # rospy.logdebug(" lenth objArray.detections: %f", len(objArray.detections))
-        size_filter = 20
+        size_filter = 10
         
         if len(objArray.detections) != 0:
             # align coordinate axis X
@@ -244,7 +244,7 @@ class Subscriber(object):
                 # rospy.logdebug('------------------------------')
                 # rospy.logdebug('Diff points: %f',diff)
 
-                if diff>0.3 and self.VecNeural_x_previous != 0:
+                if diff>0.2 and self.VecNeural_x_previous != 0:
                     self.VecNeural_x_previous = neuralx_current
                     # self.VecNeural.x = 0
                     # rospy.logdebug('------------------------------')
@@ -277,7 +277,7 @@ class Subscriber(object):
                 rospy.logdebug('------------------------------')
                 # rospy.logdebug('Diff points: %f',diff)
 
-                if diff>0.3 and self.VecNeural_y_previous != 0:
+                if diff>0.2 and self.VecNeural_y_previous != 0:
                     self.VecNeural_y_previous = neuraly_current
                     # self.VecNeural.y = 0
                     # rospy.logdebug('------------------------------')
@@ -310,7 +310,7 @@ class Subscriber(object):
                 # rospy.logdebug('------------------------------')
                 # rospy.logdebug('Diff points: %f',diff)
 
-                if diff>0.5 and self.VecNeural_z_previous != 0:
+                if diff>0.4 and self.VecNeural_z_previous != 0:
                     self.VecNeural_z_previous = neuralz_current
                     # self.VecNeural.z = 0
                     # rospy.logdebug('------------------------------')

@@ -74,6 +74,8 @@ Visualization Manager:
           Value: true
         odom:
           Value: true
+        rcnn_odom:
+          Value: true
         tag_1:
           Value: false
       Marker Scale: 5
@@ -92,6 +94,8 @@ Visualization Manager:
                   camera_optical:
                     {}
           hybrid_odom:
+            {}
+          rcnn_odom:
             {}
           tag_1:
             {}
@@ -192,25 +196,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 19.1067657
+      Distance: 13.5263376
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.843157053
-        Y: 1.67711508
-        Z: 3.66432333
+        X: 0.662312448
+        Y: -1.23863792
+        Z: 4.78925228
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.765396953
+      Pitch: 0.770397007
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.19860315
+      Yaw: 5.58861113
     Saved: ~
 Window Geometry:
   Displays:
