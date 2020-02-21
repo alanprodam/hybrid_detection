@@ -224,9 +224,9 @@ class Subscriber(object):
         
         if len(objArray.detections) != 0:
             # align coordinate axis X
-            neuralx_current = (-1)*(objArray.detections[0].results[0].pose.pose.position.x)
+            neuralz_current = objArray.detections[0].results[0].pose.pose.position.x
             neuraly_current = objArray.detections[0].results[0].pose.pose.position.y
-            neuralz_current = objArray.detections[0].results[0].pose.pose.position.z
+            neuralx_current = (-1)*objArray.detections[0].results[0].pose.pose.position.z
             # rospy.logdebug("--------------------------------")
             # rospy.logdebug("rcnn_pose.x (m): %f", VecNeuralx_current)
             # rospy.logdebug("rcnn_pose.y (m): %f", VecNeuraly_current)
@@ -246,7 +246,7 @@ class Subscriber(object):
                 # rospy.logdebug('------------------------------')
                 # rospy.logdebug('Diff points: %f',diff)
 
-                if diff>0.2 and self.VecNeural_x_previous != 0:
+                if diff>0.3 and self.VecNeural_x_previous != 0:
                     self.VecNeural_x_previous = neuralx_current
                     # self.VecNeural.x = 0
                     # rospy.logdebug('------------------------------')
@@ -279,7 +279,7 @@ class Subscriber(object):
                 # rospy.logdebug('------------------------------')
                 # rospy.logdebug('Diff points: %f',diff)
 
-                if diff>0.2 and self.VecNeural_y_previous != 0:
+                if diff>0.3 and self.VecNeural_y_previous != 0:
                     self.VecNeural_y_previous = neuraly_current
                     # self.VecNeural.y = 0
                     # rospy.logdebug('------------------------------')
@@ -312,7 +312,7 @@ class Subscriber(object):
                 # rospy.logdebug('------------------------------')
                 # rospy.logdebug('Diff points: %f',diff)
 
-                if diff>0.4 and self.VecNeural_z_previous != 0:
+                if diff>0.6 and self.VecNeural_z_previous != 0:
                     self.VecNeural_z_previous = neuralz_current
                     # self.VecNeural.z = 0
                     # rospy.logdebug('------------------------------')
@@ -342,7 +342,7 @@ class Subscriber(object):
             yaw = euler[2]
 
             # # since all odometry is 6DOF we'll need a quaternion created from yaw
-            odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
+            odom_quat = tf.transformations.quaternion_from_euler(-yaw, 0, 0)
 
             # set the position
             self.rcnn_odom.pose.pose = Pose(self.VecNeural, Quaternion(*odom_quat))
@@ -364,7 +364,7 @@ class Subscriber(object):
         #aruco_pose = data
 
         # print "received data: ", data
-        self.VecAruco = Vector3(data.position.x, data.position.y, data.position.z)
+        self.VecAruco = Vector3(-data.position.z, data.position.x, data.position.y)
         self.OriAruco = Quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
         # rospy.logdebug("--------------------------------")
         # rospy.logdebug("aruco_pose.x (m): %f", self.VecAruco.x)
@@ -382,14 +382,14 @@ class Subscriber(object):
         yaw = euler[2]
 
         # since all odometry is 6DOF we'll need a quaternion created from yaw
-        odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
+        odom_quat = tf.transformations.quaternion_from_euler(-yaw, 0, 0)
 
         # set the position
         self.aruco_odom.pose.pose = Pose(self.VecAruco, Quaternion(*odom_quat))
 
         tf_aruco_to_drone = tf.TransformBroadcaster()
         tf_aruco_to_drone.sendTransform(
-                      (data.position.x, data.position.y, data.position.z), 
+                      (self.VecAruco.x, self.VecAruco.y, self.VecAruco.z), 
                       odom_quat, 
                       self.aruco_odom.header.stamp, 
                       "aruco_odom",
