@@ -241,3 +241,6 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(hybrid_detection src/butterworth.cpp)
+target_link_libraries(hybrid_detection ${catkin_LIBRARIES})
