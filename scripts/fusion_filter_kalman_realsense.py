@@ -89,7 +89,7 @@ class Subscriber(object):
         self.list_time_aruco = []
 
         # Publishers
-        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3)
+        self.pub_hybrid = rospy.Publisher('kalman/hybrid', Vector3)
         self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
         self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
         self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry)
@@ -217,7 +217,7 @@ class Subscriber(object):
 
                 # publish the message
                 self.odom_filter_pub.publish(hybrid_odom)
-                self.pub_hibrid.publish(vec)
+                self.pub_hybrid.publish(vec)
 
             r.sleep()
 

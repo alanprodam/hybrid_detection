@@ -1,7 +1,8 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
+#include <geometry_msgs/Vector3.h>
 
-constexpr size_t kQueueSize = 100;
+unsigned kQueueSize = 100;
 
 //global variables because I'm lazy
 ros::Publisher imu_pub_;
@@ -99,6 +100,23 @@ void imuCallback(const sensor_msgs::ImuConstPtr& msg_in) {
   imu_pub_.publish(msg_out);
 }
 
+void kalmanCallback(const geometry_msgs::Vector3ConstPtr& msg_in) {
+
+  static Butter2 butter_ax;
+  static Butter2 butter_ay;
+  static Butter2 butter_az;
+  static Butter2 butter_wx;
+  static Butter2 butter_wy;
+  static Butter2 butter_wz;
+
+  geometry_msgs::Vector3 msg_out = *msg_in;
+  msg_out.x = butter_ax.apply(msg_in->x);
+  msg_out.y = butter_ay.apply(msg_in->y);
+  msg_out.z = butter_az.apply(msg_in->z);
+
+  // imu_pub_.publish(msg_out);
+}
+
 int main(int argc, char** argv) {
   ros::init(argc, argv, "butter_node");
 
@@ -108,8 +126,11 @@ int main(int argc, char** argv) {
   ros::Subscriber imu_sub =
       nh.subscribe("input_imu", kQueueSize, &imuCallback);
 
-  imu_pub_ = nh.advertise<sensor_msgs::Imu>("output_imu", kQueueSize);
+  ros::Subscriber sub_hybrid =
+      nh.subscribe("kalman/hybrid", kQueueSize, &kalmanCallback);
 
+
+  imu_pub_ = nh.advertise<sensor_msgs::Imu>("output_imu", kQueueSize);
   ros::spin();
 
   return 0;
