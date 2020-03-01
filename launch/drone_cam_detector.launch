@@ -2,17 +2,18 @@
   <!-- <arg name="markerId"        default="94"/> -->
   <arg name="marker1Id"         default="273"/>
   <arg name="marker2Id"         default="90"/>
-  <arg name="markerSize"        default="0.60"/>    <!-- in m -->
+  <arg name="markerSize"        default="0.50"/>    <!-- in m -->
   <arg name="dct_normalization" default="True" />
   <arg name="dct_filter_size"   default="2" />
   <arg name="marker1_frame"     default="tag_1" />
   <arg name="marker2_frame"     default="tag_2" />
   <arg name="corner_refinement" default="SUBPIX"/>
 
-  <arg name="markerSizeRCNN"    default="0.60"/>    <!-- in m -->
-  <arg name="distancefocal"     default="700"/>  
+  <arg name="markerSizeRCNN"    default="0.50"/>    <!-- in m -->
+  <arg name="distancefocal"     default="750"/>  
   <arg name="maxnumberofboxes"  default="1"/>    
-  <arg name="minimumconfidence" default="0.85"/>    <!-- in % -->
+  <arg name="minimumconfidence" default="0.99"/>    <!-- in % -->
+  <arg name="nameparent"        default="odom"/>
 
   <node pkg="aruco_ros" type="double" name="aruco_double">
       <remap from="/camera_info" to="/bebop/camera_info" />
@@ -23,7 +24,7 @@
       <param name="marker_id2" value="$(arg marker2Id)"/>
       <param name="normalizeImage" value="$(arg dct_normalization)"/>
       <param name="dct_components_to_remove" value="$(arg dct_filter_size)"/>
-      <param name="parent_name" value="odom"/>
+      <param name="parent_name" value="$(arg nameparent)"/>
       <param name="child_name1" value="$(arg marker1_frame)" />
       <param name="child_name2" value="$(arg marker2_frame)" />
       <param name="corner_refinement" value="$(arg corner_refinement)" />
@@ -31,6 +32,7 @@
 
   <node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
     <remap from="image" to="/bebop/image_raw"/>
+    <param name="parent_name" value="$(arg nameparent)"/>
     <param name="markerSize_RCNN" value="$(arg markerSizeRCNN)"/>
     <param name="distance_focal" value="$(arg distancefocal)"/>
     <param name="max_number_of_boxes" value="$(arg maxnumberofboxes)"/>

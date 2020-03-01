@@ -36,7 +36,6 @@ class Kalman(object):
         self.first = True
 
     def update(self, Z):
-
         w = Z - self.H * self.x
         S = self.H * self.P * self.H.getT() + self.R
         K = self.P * self.H.getT() * S.getI()
@@ -53,7 +52,7 @@ class Subscriber(object):
         super(Subscriber, self).__init__()
         rospy.init_node('filter_node', anonymous=True, log_level=rospy.DEBUG)
 
-        self.PARENT_NAME = rospy.get_param('~parent_name', "camera_odom_frame")
+        self.PARENT_NAME = rospy.get_param('~parent_name', "odom")
 
         self.kalman = Kalman(n_states = 3, n_sensors = 6)
         self.kalman.P *= 10
@@ -82,6 +81,8 @@ class Subscriber(object):
         self.list_y = []
         self.list_z = []
 
+        self.list_time_aruco = []
+
         self.VecNeural_x_previous = 0
         self.VecNeural_y_previous = 0
         self.VecNeural_z_previous = 0
@@ -91,6 +92,7 @@ class Subscriber(object):
         self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
         self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
         self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry)
+        self.p_aruco = rospy.Publisher("time/aruco", Vector3)
 
         # transform tf
         tf_hybrid_to_drone = tf.TransformBroadcaster()
@@ -100,7 +102,7 @@ class Subscriber(object):
         rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN)
         rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco)
         
-        r = rospy.Rate(100.0)
+        r = rospy.Rate(30.0)
         while not rospy.is_shutdown():
             neural = [self.VecNeural.x, self.VecNeural.y, self.VecNeural.z]
             aruco = [self.VecAruco.x, self.VecAruco.y, self.VecAruco.z]
@@ -115,6 +117,17 @@ class Subscriber(object):
             current_time = rospy.Time.now()
             dt_aruco = (current_time-self.aruco_odom.header.stamp).to_sec()
             dt_rcnn = (current_time-self.rcnn_odom.header.stamp).to_sec()
+
+            if len(self.list_time_aruco) < 6:
+                self.list_time_aruco.append(dt_aruco)
+            else:
+                self.list_time_aruco.append(dt_aruco)
+                del self.list_time_aruco[0]
+                med_time = sum(self.list_x)/len(self.list_x)
+
+            rospy.logdebug("------------------------")
+            rospy.logdebug("time of aru : %f", dt_aruco)
+            rospy.logdebug("frequencia :  %f", (med_time))
 
             # module_rcnn = math.sqrt(abs(mat[3]**2)+abs(mat[4]**2)+abs(mat[5]**2))
             # module_aru = math.sqrt(abs(mat[0]**2)+abs(mat[1]**2)+abs(mat[2]**2))
@@ -362,7 +375,7 @@ class Subscriber(object):
     def callbackPoseAruco(self, data):
         # recive data
         #aruco_pose = data
-
+        init_time = rospy.Time.now()
         # print "received data: ", data
         self.VecAruco = Vector3(data.position.x, data.position.y, data.position.z)
         self.OriAruco = Quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
@@ -395,9 +408,17 @@ class Subscriber(object):
                       "aruco_odom",
                       self.PARENT_NAME) #world
 
-        self.Keyframe_aruco+=1    
-
+        self.Keyframe_aruco+=1
         self.odom_aruco_pub.publish(self.aruco_odom)
+        
+        pAruco = Vector3()
+        current_time = rospy.Time.now()
+        dt_aruco = (current_time-init_time).to_sec()
+        #f=1/T
+        pAruco.x = dt_aruco   
+        pAruco.y = (1/dt_aruco) 
+        pAruco.y = data.position.z
+        self.p_aruco.publish(pAruco)
 
 if __name__ == '__main__':
     subscriber = Subscriber()

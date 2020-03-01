@@ -86,6 +86,8 @@ class Subscriber(object):
         self.VecNeural_y_previous = 0
         self.VecNeural_z_previous = 0
 
+        self.list_time_aruco = []
+
         # Publishers
         self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3)
         self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
@@ -115,6 +117,17 @@ class Subscriber(object):
             current_time = rospy.Time.now()
             dt_aruco = (current_time-self.aruco_odom.header.stamp).to_sec()
             dt_rcnn = (current_time-self.rcnn_odom.header.stamp).to_sec()
+
+            if len(self.list_time_aruco) < 6:
+                self.list_time_aruco.append(dt_aruco)
+            else:
+                self.list_time_aruco.append(dt_aruco)
+                del self.list_time_aruco[0]
+                med_time = sum(self.list_time_aruco)/len(self.list_time_aruco)
+
+                # rospy.logdebug("------------------------")
+                # rospy.logdebug("time of aru : %f", dt_aruco)
+                # rospy.logdebug("frequencia :  %f", med_time)
 
             # module_rcnn = math.sqrt(abs(mat[3]**2)+abs(mat[4]**2)+abs(mat[5]**2))
             # module_aru = math.sqrt(abs(mat[0]**2)+abs(mat[1]**2)+abs(mat[2]**2))
@@ -181,12 +194,12 @@ class Subscriber(object):
 
                 explicit_quat = [self.OriAruco.x, self.OriAruco.y, self.OriAruco.z, self.OriAruco.w]
                 euler = tf.transformations.euler_from_quaternion(explicit_quat)
-                # roll = euler[0]
-                # pitch = euler[1]
+                roll = euler[0]
+                pitch = euler[1]
                 yaw = euler[2]
 
                 # # since all odometry is 6DOF we'll need a quaternion created from yaw
-                odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
+                odom_quat = tf.transformations.quaternion_from_euler(-yaw, 0, 0)
 
                 # set the position
                 hybrid_odom.pose.pose = Pose(vec, Quaternion(*odom_quat))
@@ -195,7 +208,7 @@ class Subscriber(object):
                               (self.kalman.x[0],self.kalman.x[1],self.kalman.x[2]), 
                               odom_quat, 
                               hybrid_odom.header.stamp, 
-                              "hybrid_odom",
+                              "hybrid_odom2",
                               self.PARENT_NAME) #world
 
                 ##################################################################################
@@ -224,9 +237,13 @@ class Subscriber(object):
         
         if len(objArray.detections) != 0:
             # align coordinate axis X
-            neuralz_current = objArray.detections[0].results[0].pose.pose.position.x
-            neuraly_current = objArray.detections[0].results[0].pose.pose.position.y
+            # neuralx_current = (-1)*objArray.detections[0].results[0].pose.pose.position.z
+            # neuraly_current = objArray.detections[0].results[0].pose.pose.position.y
+            # neuralz_current = objArray.detections[0].results[0].pose.pose.position.x
+
             neuralx_current = (-1)*objArray.detections[0].results[0].pose.pose.position.z
+            neuraly_current = (-1)*objArray.detections[0].results[0].pose.pose.position.x
+            neuralz_current = objArray.detections[0].results[0].pose.pose.position.y
             # rospy.logdebug("--------------------------------")
             # rospy.logdebug("rcnn_pose.x (m): %f", VecNeuralx_current)
             # rospy.logdebug("rcnn_pose.y (m): %f", VecNeuraly_current)
@@ -377,8 +394,8 @@ class Subscriber(object):
         # stabilize angles and align transformations
         explicit_quat = [data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w]
         euler = tf.transformations.euler_from_quaternion(explicit_quat)
-        # roll = euler[0]
-        # pitch = euler[1]
+        roll = euler[0]
+        pitch = euler[1]
         yaw = euler[2]
 
         # since all odometry is 6DOF we'll need a quaternion created from yaw
