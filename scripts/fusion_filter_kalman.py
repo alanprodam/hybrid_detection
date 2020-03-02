@@ -81,7 +81,7 @@ class Subscriber(object):
         self.list_y = []
         self.list_z = []
 
-        self.list_time_aruco = []
+        self.last_time_aruco = 0
 
         self.VecNeural_x_previous = 0
         self.VecNeural_y_previous = 0
@@ -375,7 +375,6 @@ class Subscriber(object):
     def callbackPoseAruco(self, data):
         # recive data
         #aruco_pose = data
-        init_time = rospy.Time.now()
         # print "received data: ", data
         self.VecAruco = Vector3(data.position.x, data.position.y, data.position.z)
         self.OriAruco = Quaternion(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
@@ -412,13 +411,15 @@ class Subscriber(object):
         self.odom_aruco_pub.publish(self.aruco_odom)
         
         pAruco = Vector3()
-        current_time = rospy.Time.now()
-        dt_aruco = (current_time-init_time).to_sec()
+
+        dt_aruco = (self.last_time_aruco-self.aruco_odom.header.stamp).to_sec()
         #f=1/T
         pAruco.x = dt_aruco   
         pAruco.y = (1/dt_aruco) 
         pAruco.y = data.position.z
         self.p_aruco.publish(pAruco)
+
+        self.last_time_aruco = self.aruco_odom.header.stamp
 
 if __name__ == '__main__':
     subscriber = Subscriber()
