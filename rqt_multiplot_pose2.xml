@@ -29,57 +29,6 @@
                                     <field>pose/pose/position/x</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>0</absolute_maximum>
-                                        <absolute_minimum>-5</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/odom_filter3</topic>
-                                    <type>nav_msgs/Odometry</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>pose/pose/position/y</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>2</absolute_maximum>
-                                        <absolute_minimum>-2</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/odom_filter3</topic>
-                                    <type>nav_msgs/Odometry</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#4900e6</custom_color>
-                                <type>1</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>2</pen_style>
-                                <pen_width>5</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>Hybrid_filtered</title>
-                        </curve_0>
-                        <curve_1>
-                            <axes>
-                                <x_axis>
-                                    <field>pose/pose/position/x</field>
-                                    <field_type>0</field_type>
-                                    <scale>
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
@@ -104,7 +53,7 @@
                                 </y_axis>
                             </axes>
                             <color>
-                                <custom_color>#da0404</custom_color>
+                                <custom_color>#dacc01</custom_color>
                                 <type>1</type>
                             </color>
                             <data>
@@ -124,8 +73,8 @@
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>ArUco</title>
-                        </curve_1>
-                        <curve_2>
+                        </curve_0>
+                        <curve_1>
                             <axes>
                                 <x_axis>
                                     <field>pose/pose/position/x</field>
@@ -155,7 +104,7 @@
                                 </y_axis>
                             </axes>
                             <color>
-                                <custom_color>#00be07</custom_color>
+                                <custom_color>#067a00</custom_color>
                                 <type>1</type>
                             </color>
                             <data>
@@ -175,8 +124,8 @@
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>GroundTruth</title>
-                        </curve_2>
-                        <curve_3>
+                        </curve_1>
+                        <curve_2>
                             <axes>
                                 <x_axis>
                                     <field>pose/pose/position/x</field>
@@ -206,7 +155,7 @@
                                 </y_axis>
                             </axes>
                             <color>
-                                <custom_color>#e5e500</custom_color>
+                                <custom_color>#cc0003</custom_color>
                                 <type>1</type>
                             </color>
                             <data>
@@ -226,7 +175,109 @@
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>CNN</title>
+                        </curve_2>
+                        <curve_3>
+                            <axes>
+                                <x_axis>
+                                    <field>pose/pose/position/x</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/odom_filter2</topic>
+                                    <type>nav_msgs/Odometry</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/pose/position/y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/odom_filter2</topic>
+                                    <type>nav_msgs/Odometry</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#0f00df</custom_color>
+                                <type>1</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>4</pen_style>
+                                <pen_width>5</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Hybrid</title>
                         </curve_3>
+                        <curve_4>
+                            <axes>
+                                <x_axis>
+                                    <field>x</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/kalman/butterworth</topic>
+                                    <type>geometry_msgs/Vector3</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/kalman/butterworth</topic>
+                                    <type>geometry_msgs/Vector3</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#9d0195</custom_color>
+                                <type>1</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>5</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Butterworth</title>
+                        </curve_4>
                     </curves>
                     <legend>
                         <visible>true</visible>
