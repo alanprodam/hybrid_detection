@@ -150,6 +150,8 @@ catkin_install_python(PROGRAMS scripts/detect_aruco.py scripts/detect_rcnn.py sc
 ## Build ##
 ###########
 
+add_compile_options(-std=c++11)
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
@@ -161,6 +163,9 @@ include_directories(
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/hybrid_detection.cpp
 # )
+
+add_executable(butterworth src/butterworth.cpp)
+target_link_libraries(butterworth ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -241,6 +246,3 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-add_executable(hybrid_detection src/butterworth.cpp)
-target_link_libraries(hybrid_detection ${catkin_LIBRARIES})

@@ -5,7 +5,8 @@
 unsigned kQueueSize = 100;
 
 //global variables because I'm lazy
-ros::Publisher imu_pub_;
+// ros::Publisher imu_pub_;
+ros::Publisher butter_pub;
 
 class Butter2 {
  public:
@@ -29,8 +30,12 @@ class Butter2 {
     //a_[1] = 0.0000000000
     
     // 25 Hz cutoff
-    gain_ = 1.024264069e+01;
-    a_[0] = -0.3333333333;
+    // gain_ = 1.024264069e+01;
+    // a_[0] = -0.3333333333;
+    // a_[1] = 0.9428090416;
+
+    gain_ = 1.044264069e+01;
+    a_[0] = -0.334;
     a_[1] = 0.9428090416;
     initalised = false;
   }
@@ -79,42 +84,39 @@ class Butter2 {
 };
 
 
-void imuCallback(const sensor_msgs::ImuConstPtr& msg_in) {
+// void imuCallback(const sensor_msgs::ImuConstPtr& msg_in) {
 
-  static Butter2 butter_ax;
-  static Butter2 butter_ay;
-  static Butter2 butter_az;
-  static Butter2 butter_wx;
-  static Butter2 butter_wy;
-  static Butter2 butter_wz;
+//   static Butter2 butter_ax;
+//   static Butter2 butter_ay;
+//   static Butter2 butter_az;
+//   static Butter2 butter_wx;
+//   static Butter2 butter_wy;
+//   static Butter2 butter_wz;
 
-  sensor_msgs::Imu msg_out = *msg_in;
-  msg_out.linear_acceleration.x = butter_ax.apply(msg_in->linear_acceleration.x);
-  msg_out.linear_acceleration.y = butter_ay.apply(msg_in->linear_acceleration.y);
-  msg_out.linear_acceleration.z = butter_az.apply(msg_in->linear_acceleration.z);
+//   sensor_msgs::Imu msg_out = *msg_in;
+//   msg_out.linear_acceleration.x = butter_ax.apply(msg_in->linear_acceleration.x);
+//   msg_out.linear_acceleration.y = butter_ay.apply(msg_in->linear_acceleration.y);
+//   msg_out.linear_acceleration.z = butter_az.apply(msg_in->linear_acceleration.z);
 
-  msg_out.angular_velocity.x = butter_wx.apply(msg_in->angular_velocity.x);
-  msg_out.angular_velocity.y = butter_wy.apply(msg_in->angular_velocity.y);
-  msg_out.angular_velocity.z = butter_wz.apply(msg_in->angular_velocity.z);
+//   msg_out.angular_velocity.x = butter_wx.apply(msg_in->angular_velocity.x);
+//   msg_out.angular_velocity.y = butter_wy.apply(msg_in->angular_velocity.y);
+//   msg_out.angular_velocity.z = butter_wz.apply(msg_in->angular_velocity.z);
 
-  imu_pub_.publish(msg_out);
-}
+//   imu_pub_.publish(msg_out);
+// }
 
 void kalmanCallback(const geometry_msgs::Vector3ConstPtr& msg_in) {
 
-  static Butter2 butter_ax;
-  static Butter2 butter_ay;
-  static Butter2 butter_az;
-  static Butter2 butter_wx;
-  static Butter2 butter_wy;
-  static Butter2 butter_wz;
+  static Butter2 butter_x;
+  static Butter2 butter_y;
+  static Butter2 butter_z;
 
   geometry_msgs::Vector3 msg_out = *msg_in;
-  msg_out.x = butter_ax.apply(msg_in->x);
-  msg_out.y = butter_ay.apply(msg_in->y);
-  msg_out.z = butter_az.apply(msg_in->z);
+  msg_out.x = butter_x.apply(msg_in->x);
+  msg_out.y = butter_y.apply(msg_in->y);
+  msg_out.z = butter_z.apply(msg_in->z);
 
-  // imu_pub_.publish(msg_out);
+  butter_pub.publish(msg_out);
 }
 
 int main(int argc, char** argv) {
@@ -123,14 +125,14 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
 
-  ros::Subscriber imu_sub =
-      nh.subscribe("input_imu", kQueueSize, &imuCallback);
+  // ros::Subscriber imu_sub =
+  //     nh.subscribe("input_imu", kQueueSize, &imuCallback);
 
   ros::Subscriber sub_hybrid =
-      nh.subscribe("kalman/hybrid", kQueueSize, &kalmanCallback);
+      nh.subscribe("kalman/hybrid2", kQueueSize, &kalmanCallback);
 
 
-  imu_pub_ = nh.advertise<sensor_msgs::Imu>("output_imu", kQueueSize);
+  butter_pub = nh.advertise<geometry_msgs::Vector3>("kalman/butterworth", kQueueSize);
   ros::spin();
 
   return 0;
