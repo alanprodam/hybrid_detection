@@ -170,9 +170,9 @@ class Subscriber(object):
             Zarray = np.concatenate((arrayNeral, arrayAruco), axis=None)
             self.kalman.R = np.diag(Zarray)
 
-            rospy.logdebug("arrayNeral : %f", covNeural)
-            rospy.logdebug("arrayAruco : %f", covAruco)
-            rospy.logdebug("------------------------")
+            # rospy.logdebug("arrayNeral : %f", covNeural)
+            # rospy.logdebug("arrayAruco : %f", covAruco)
+            # rospy.logdebug("------------------------")
 
             self.kalman.predict()
             self.kalman.update(mat)
@@ -182,7 +182,7 @@ class Subscriber(object):
             vec.y = self.kalman.x[1]
             vec.z = self.kalman.x[2]
 
-            size_filter_kalman_high = 15
+            size_filter_kalman_high = 20
 
             # Filter list_kalma_x
             if len(self.list_kalma_x) < size_filter_kalman_high:
