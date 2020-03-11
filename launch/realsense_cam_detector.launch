@@ -14,9 +14,9 @@
   <arg name="corner_refinement" default="SUBPIX"/>
 
   <arg name="markerSizeRCNN"    default="0.137"/>    <!-- in m -->
-  <arg name="distancefocal"     default="700"/>  
+  <arg name="distancefocal"     default="720"/>  
   <arg name="maxnumberofboxes"  default="1"/>    
-  <arg name="minimumconfidence" default="0.99"/>    <!-- in % -->
+  <arg name="minimumconfidence" default="0.85"/>    <!-- in % -->
   <arg name="nameparent"        default="camera_odom_frame"/>
 
   <node pkg="aruco_ros" type="double" name="aruco_double">
