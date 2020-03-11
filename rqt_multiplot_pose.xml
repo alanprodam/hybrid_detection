@@ -188,7 +188,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/odom_rcnn</topic>
+                                    <topic>/odom_rcnn2</topic>
                                     <type>nav_msgs/Odometry</type>
                                 </x_axis>
                                 <y_axis>
@@ -201,7 +201,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/odom_rcnn</topic>
+                                    <topic>/odom_rcnn2</topic>
                                     <type>nav_msgs/Odometry</type>
                                 </y_axis>
                             </axes>

@@ -74,7 +74,7 @@ class Subscriber(object):
 
         self.rcnn_odom = Odometry()
         self.rcnn_odom.header.stamp = rospy.Time.now()
-        self.rcnn_odom.header.frame_id = "rcnn_odom"
+        self.rcnn_odom.header.frame_id = "rcnn_odom2"
         self.rcnn_odom.header.seq = self.Keyframe_rcnn
         self.rcnn_odom.child_frame_id = self.PARENT_NAME
 
@@ -91,7 +91,7 @@ class Subscriber(object):
         # Publishers
         self.pub_hybrid = rospy.Publisher('kalman/hybrid', Vector3)
         self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
-        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
+        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn2", Odometry)
         self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry)
 
         # transform tf
@@ -99,7 +99,7 @@ class Subscriber(object):
         
         Keyframe = 0
         
-        rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN)
+        rospy.Subscriber("rcnn/objects2", Detection2DArray, self.callbackPoseRCNN)
         rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco)
         
         r = rospy.Rate(100.0)
@@ -369,7 +369,7 @@ class Subscriber(object):
                           (self.VecNeural.x,self.VecNeural.y,self.VecNeural.z), 
                           odom_quat, 
                           self.rcnn_odom.header.stamp, 
-                          "rcnn_odom",
+                          "rcnn_odom2",
                           self.PARENT_NAME) #world
 
             self.Keyframe_rcnn+=1    
