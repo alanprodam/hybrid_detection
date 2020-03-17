@@ -53,7 +53,7 @@ class Subscriber(object):
         super(Subscriber, self).__init__()
         rospy.init_node('filter_node', anonymous=True, log_level=rospy.DEBUG)
 
-        self.PARENT_NAME = rospy.get_param('~parent_name', "camera_odom_frame")
+        self.PARENT_NAME = rospy.get_param('parent_name', 'camera_link')
 
         self.kalman = Kalman(n_states = 3, n_sensors = 6)
         self.kalman.P *= 10
@@ -74,7 +74,7 @@ class Subscriber(object):
 
         self.rcnn_odom = Odometry()
         self.rcnn_odom.header.stamp = rospy.Time.now()
-        self.rcnn_odom.header.frame_id = "rcnn_odom2"
+        self.rcnn_odom.header.frame_id = "rcnn_odom"
         self.rcnn_odom.header.seq = self.Keyframe_rcnn
         self.rcnn_odom.child_frame_id = self.PARENT_NAME
 
@@ -91,7 +91,7 @@ class Subscriber(object):
         # Publishers
         self.pub_hybrid = rospy.Publisher('kalman/hybrid', Vector3)
         self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
-        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn2", Odometry)
+        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
         self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry)
 
         # transform tf
@@ -99,7 +99,7 @@ class Subscriber(object):
         
         Keyframe = 0
         
-        rospy.Subscriber("rcnn/objects2", Detection2DArray, self.callbackPoseRCNN)
+        rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN)
         rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco)
         
         r = rospy.Rate(100.0)
@@ -208,7 +208,7 @@ class Subscriber(object):
                               (self.kalman.x[0],self.kalman.x[1],self.kalman.x[2]), 
                               odom_quat, 
                               hybrid_odom.header.stamp, 
-                              "hybrid_odom2",
+                              "hybrid_odom",
                               self.PARENT_NAME) #world
 
                 ##################################################################################
@@ -369,7 +369,7 @@ class Subscriber(object):
                           (self.VecNeural.x,self.VecNeural.y,self.VecNeural.z), 
                           odom_quat, 
                           self.rcnn_odom.header.stamp, 
-                          "rcnn_odom2",
+                          "rcnn_odom",
                           self.PARENT_NAME) #world
 
             self.Keyframe_rcnn+=1    

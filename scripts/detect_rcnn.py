@@ -74,8 +74,8 @@ config.gpu_options.per_process_gpu_memory_fraction = GPU_FRACTION
 class Detector:
 
     def __init__(self):
-        self.image_pub = rospy.Publisher("rcnn/debug_image2",Image, queue_size=1)
-        self.object_pub = rospy.Publisher("rcnn/objects2", Detection2DArray, queue_size=1)
+        self.image_pub = rospy.Publisher("rcnn/debug_image",Image, queue_size=1)
+        self.object_pub = rospy.Publisher("rcnn/objects", Detection2DArray, queue_size=1)
 
         # Create a supscriber from topic "image_raw"
         self.bridge = CvBridge()
@@ -90,7 +90,7 @@ class Detector:
         rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.99)
         rospy.logdebug("%s is %s default %f", rospy.resolve_name('~distance_focal'), self.DISTANCE_FOCAL, 700)
 
-    def image_callback(self, data):
+    def image_callback(self, data): 
         objArray = Detection2DArray()
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
