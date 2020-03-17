@@ -1,0 +1,60 @@
+<launch>
+
+  <!--Realsense CAM-->
+  <include file="$(find hybrid_detection)/launch/rs_d435.launch" />
+
+  <!-- <arg name="markerId"        default="94"/> -->
+  <arg name="marker1Id"         default="273"/>
+  <arg name="marker2Id"         default="90"/>
+  <arg name="markerSize"        default="0.137"/>    <!-- in m -->
+  <arg name="dct_normalization" default="True" />
+  <arg name="dct_filter_size"   default="2" />
+  <arg name="marker1_frame"     default="tag_1" />
+  <arg name="marker2_frame"     default="tag_2" />
+  <arg name="corner_refinement" default="SUBPIX"/>
+
+  <arg name="markerSizeRCNN"    default="0.137"/>    <!-- in m -->
+  <arg name="distancefocal"     default="720"/>  
+  <arg name="maxnumberofboxes"  default="1"/>    
+  <arg name="minimumconfidence" default="0.85"/>    <!-- in % -->
+  <arg name="nameparent"        default="camera_odom_frame"/>
+
+  <node pkg="aruco_ros" type="double" name="aruco_double">
+      <remap from="/camera_info" to="/cv_camera/camera_info" />
+      <remap from="/image" to="/cv_camera/image_raw" />
+      <param name="image_is_rectified" value="True"/>
+      <param name="marker_size" value="$(arg markerSize)"/>
+      <param name="marker_id1" value="$(arg marker1Id)"/>
+      <param name="marker_id2" value="$(arg marker2Id)"/>
+      <param name="normalizeImage" value="$(arg dct_normalization)"/>
+      <param name="dct_components_to_remove" value="$(arg dct_filter_size)"/>
+      <param name="parent_name" value="$(arg nameparent)"/>
+      <param name="child_name1" value="$(arg marker1_frame)" />
+      <param name="child_name2" value="$(arg marker2_frame)" />
+      <param name="corner_refinement" value="$(arg corner_refinement)" />
+  </node>
+
+	<node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
+      <remap from="/image" to="/cv_camera/image_raw"/> <!--/cv_camera/image_rect_color or /bebop/image_raw -->
+      <param name="parent_name" value="$(arg nameparent)"/>
+      <param name="markerSize_RCNN" value="$(arg markerSizeRCNN)"/>
+      <param name="distance_focal" value="$(arg distancefocal)"/>
+      <param name="max_number_of_boxes" value="$(arg maxnumberofboxes)"/>
+      <param name="minimum_confidence" value="$(arg minimumconfidence)"/>
+  </node>
+
+  <node pkg= "hybrid_detection" name="filter" type="fusion_filter_kalman_realsense.py"  output="screen"/>
+
+  <node name="cv_camera" pkg="usb_cam" type="usb_cam_node" output="screen" >
+      <param name="video_device" value="/dev/video1" />
+      <param name="image_width" value="640" />
+      <param name="image_height" value="480" />
+      <param name="pixel_format" value="yuyv" />
+      <param name="camera_frame_id" value="usb_cam" />
+      <param name="io_method" value="mmap"/>
+      <param name="camera_info_url" value="file://$(env HOME)/.ros/camera_info/head_camera.yaml"/>
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hybrid_detection)/rviz/rviz_config_realsense.rviz"/>
+
+</launch>
