@@ -438,3 +438,9 @@ Open a new console and change to the directory where you have downloaded the exa
 ```
 rosbag play <name-of-dataset>.bag
 ```
+
+Or record:
+
+```
+rosbag record -O my_bagfile_1.bag /aruco_double/result_img /rcnn/debug_image2 /cv_camera/image_raw
+```
