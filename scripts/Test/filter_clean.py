@@ -129,21 +129,21 @@ class Subscriber(object):
             ##################################################################################
 
             # rcnn = 0
-            if mat[2] == 0 or dt_rcnn > 5:
+            if mat[2] == 0 or dt_rcnn > 5.0:
                 covNeural = 10
-                covAruco = 0.01*abs(self.kalman.x[2])+1
+                covAruco = 0.01*abs(self.kalman.x[2])+1.0
                 # rospy.logdebug("*****Neural = 0 ou stoped!*****")
 
             # aruco = 0
-            elif mat[5] == 0 or dt_aruco > 5:
-                covNeural = (1.5/(abs(self.kalman.x[2])+0.1))+1
+            elif mat[5] == 0 or dt_aruco > 5.0:
+                covNeural = (1.5/(abs(self.kalman.x[2])+0.1))+1.0
                 covAruco = 10
                 # rospy.logdebug("*****aruco = 0 ou stoped!*****")
 
             else:
                 # greater neural error and lower aruco error at low height
-                covNeural = (0.05/(abs(self.kalman.x[2])+0.3))+0.6
-                covAruco = 0.005*abs(self.kalman.x[2])+0.3
+                covNeural = (0.05/(abs(self.kalman.x[2])+0.3))+0.45
+                covAruco = 0.05*abs(self.kalman.x[2])+0.4
                 # rospy.logdebug("*****all-run!*****")
 
             ##################################################################################
@@ -157,9 +157,9 @@ class Subscriber(object):
             Zarray = np.concatenate((arrayNeral, arrayAruco), axis=None)
             self.kalman.R = np.diag(Zarray)
 
-            # rospy.logdebug("arrayNeral : %f", covNeural)
-            # rospy.logdebug("arrayAruco : %f", covAruco)
-            # rospy.logdebug("------------------------")
+            rospy.logdebug("arrayNeral : %f", covNeural)
+            rospy.logdebug("arrayAruco : %f", covAruco)
+            rospy.logdebug("------------------------")
 
             self.kalman.predict()
             self.kalman.update(mat)
@@ -174,14 +174,14 @@ class Subscriber(object):
             # rospy.logdebug("kalman.sensor[1].y : %f", vec.y)
             # rospy.logdebug("kalman.sensor[1].z : %f", vec.z)
 
-            size_filter_kalman_high = 10
+            size_filter_kalman_high = 20
 
             # Filter list_kalma_x
             if len(self.list_kalma_x) < size_filter_kalman_high:
                 self.list_kalma_x.append(vec.x)
             else:
                 mean_filter = sum(self.list_kalma_x)/len(self.list_kalma_x)
-                if abs(mean_filter-vec.x) > 0.01:
+                if abs(mean_filter-vec.x) > 0.05:
                     self.list_kalma_x.append(vec.x)
                     del self.list_kalma_x[0]
                     self.filtered.x = sum(self.list_kalma_x)/len(self.list_kalma_x)
@@ -191,7 +191,7 @@ class Subscriber(object):
                 self.list_kalma_y.append(vec.y)
             else:
                 mean_filter = sum(self.list_kalma_y)/len(self.list_kalma_y)
-                if abs(mean_filter-vec.y) > 0.01:
+                if abs(mean_filter-vec.y) > 0.05:
                     self.list_kalma_y.append(vec.y)
                     del self.list_kalma_y[0]
                     self.filtered.y = sum(self.list_kalma_y)/len(self.list_kalma_y)
@@ -201,7 +201,7 @@ class Subscriber(object):
                 self.list_kalma_z.append(vec.y)
             else:
                 mean_filter = sum(self.list_kalma_z)/len(self.list_kalma_z)
-                if abs(mean_filter-vec.z) > 0.01:
+                if abs(mean_filter-vec.z) > 0.05:
                     self.list_kalma_z.append(vec.z)
                     del self.list_kalma_z[0]
                     self.filtered.z = sum(self.list_kalma_z)/len(self.list_kalma_z)
