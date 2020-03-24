@@ -64,6 +64,7 @@ class Subscriber(object):
 
         self.Keyframe_aruco = 0
         self.Keyframe_rcnn = 0
+        self.Keyframe_hybrid = 0
 
         self.aruco_odom = Odometry()
         self.aruco_odom.header.stamp = rospy.Time.now()
@@ -81,8 +82,6 @@ class Subscriber(object):
         self.list_y = []
         self.list_z = []
 
-        self.last_time_aruco = rospy.Time.now()
-
         self.VecNeural_x_previous = 0
         self.VecNeural_y_previous = 0
         self.VecNeural_z_previous = 0
@@ -92,24 +91,17 @@ class Subscriber(object):
         self.list_kalma_z = []
 
         # Publishers
-        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3)
-        self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
-        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
-        self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry)
-        self.p_aruco = rospy.Publisher("time/aruco", Vector3)
-
-        self.odom_filter_pub3 = rospy.Publisher("odom_filter", Odometry)
-        self.pub_hibrid3 = rospy.Publisher('kalman/hybrid', Vector3)
+        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3, queue_size=10)
+        self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry, queue_size=10)
+        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry, queue_size=10)
+        self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry, queue_size=10)
 
         # transform tf
         tf_hybrid_to_drone = tf.TransformBroadcaster()
         tf_hybrid_to_drone3 = tf.TransformBroadcaster()
-        
-        Keyframe = 0
-        Keyframe3 = 0
-        
-        rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN)
-        rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco)
+  
+        rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN, , queue_size=1)
+        rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco, , queue_size=1)
 
         vec2 = Vector3()
         vec2.x = 0
@@ -225,8 +217,8 @@ class Subscriber(object):
             if dt_aruco < 0.1 or dt_rcnn < 0.1:
                 hybrid_odom = Odometry()
                 hybrid_odom.header.stamp = rospy.Time.now()
-                hybrid_odom.header.frame_id = "hybrid_odom2"
-                hybrid_odom.header.seq = Keyframe
+                hybrid_odom.header.frame_id = "hybrid_odom"
+                hybrid_odom.header.seq = self.Keyframe_hybrid
                 hybrid_odom.child_frame_id = self.PARENT_NAME
 
                 explicit_quat = [self.OriAruco.x, self.OriAruco.y, self.OriAruco.z, self.OriAruco.w]
@@ -239,57 +231,22 @@ class Subscriber(object):
                 odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
 
                 # set the position
-                hybrid_odom.pose.pose = Pose(vec, Quaternion(*odom_quat))
-
-                tf_hybrid_to_drone.sendTransform(
-                              (self.kalman.x[0],self.kalman.x[1],self.kalman.x[2]), 
-                              odom_quat, 
-                              hybrid_odom.header.stamp, 
-                              "hybrid_odom2",
-                              self.PARENT_NAME) #world
-
-                ##################################################################################
-
-                Keyframe += 1
-
-                # publish the message
-                self.odom_filter_pub.publish(hybrid_odom)
-                self.pub_hibrid.publish(vec)
-
-            ##################################################################################
-            if dt_aruco < 0.1 or dt_rcnn < 0.1:
-                hybrid_odom3 = Odometry()
-                hybrid_odom3.header.stamp = rospy.Time.now()
-                hybrid_odom3.header.frame_id = "hybrid_odom3"
-                hybrid_odom3.header.seq = Keyframe3
-                hybrid_odom3.child_frame_id = self.PARENT_NAME
-
-                explicit_quat = [self.OriAruco.x, self.OriAruco.y, self.OriAruco.z, self.OriAruco.w]
-                euler = tf.transformations.euler_from_quaternion(explicit_quat)
-                # roll = euler[0]
-                # pitch = euler[1]
-                yaw = euler[2]
-
-                # # since all odometry is 6DOF we'll need a quaternion created from yaw
-                odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
-
-                # set the position
-                hybrid_odom3.pose.pose = Pose(vec2, Quaternion(*odom_quat))
+                hybrid_odom.pose.pose = Pose(vec2, Quaternion(*odom_quat))
 
                 tf_hybrid_to_drone3.sendTransform(
                               (vec2.x,vec2.y,vec2.z), 
                               odom_quat, 
                               hybrid_odom3.header.stamp, 
-                              "hybrid_odom3",
+                              "hybrid_odom",
                               self.PARENT_NAME) #world
 
                 ##################################################################################
 
-                Keyframe3 += 1
+                self.Keyframe_hybrid += 1
 
                 # publish the message
-                self.odom_filter_pub3.publish(hybrid_odom3)
-                self.pub_hibrid3.publish(vec2)
+                self.odom_filter_pub.publish(hybrid_odom)
+                self.pub_hibrid.publish(vec2)
 
             r.sleep()
 
@@ -485,17 +442,6 @@ class Subscriber(object):
 
         self.Keyframe_aruco+=1
         self.odom_aruco_pub.publish(self.aruco_odom)
-        
-        pAruco = Vector3()
-
-        dt_aruco = (self.aruco_odom.header.stamp-self.last_time_aruco).to_sec()
-        # #f=1/T
-        pAruco.x = dt_aruco   
-        pAruco.y = (1/dt_aruco) 
-        pAruco.y = data.position.z
-        self.p_aruco.publish(pAruco)
-
-        self.last_time_aruco = self.aruco_odom.header.stamp
 
 if __name__ == '__main__':
     subscriber = Subscriber()

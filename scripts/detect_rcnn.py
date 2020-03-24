@@ -77,8 +77,8 @@ config.gpu_options.per_process_gpu_memory_fraction = GPU_FRACTION
 class Detector:
 
     def __init__(self):
-        self.image_pub = rospy.Publisher("rcnn/debug_image2",Image, queue_size=1)
-        self.object_pub = rospy.Publisher("rcnn/objects2", Detection2DArray, queue_size=1)
+        self.image_pub = rospy.Publisher("rcnn/debug_image",Image, queue_size=1)
+        self.object_pub = rospy.Publisher("rcnn/objects", Detection2DArray, queue_size=1)
 
         # Create a supscriber from topic "image_raw"
         self.bridge = CvBridge()

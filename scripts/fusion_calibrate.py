@@ -52,7 +52,7 @@ class Subscriber(object):
         super(Subscriber, self).__init__()
         rospy.init_node('filter_node', anonymous=True, log_level=rospy.DEBUG)
 
-        self.PARENT_NAME = rospy.get_param('~parent_name', "odom")
+        self.PARENT_NAME = rospy.get_param('~parent_name', "alan")
 
         self.kalman = Kalman(n_states = 3, n_sensors = 6)
         self.kalman.P *= 10
@@ -64,6 +64,7 @@ class Subscriber(object):
 
         self.Keyframe_aruco = 0
         self.Keyframe_rcnn = 0
+        self.Keyframe_hybrid = 0
 
         self.aruco_odom = Odometry()
         self.aruco_odom.header.stamp = rospy.Time.now()
@@ -76,6 +77,12 @@ class Subscriber(object):
         self.rcnn_odom.header.frame_id = "rcnn_odom"
         self.rcnn_odom.header.seq = self.Keyframe_rcnn
         self.rcnn_odom.child_frame_id = self.PARENT_NAME
+
+        hybrid_odom = Odometry()
+        hybrid_odom.header.stamp = rospy.Time.now()
+        hybrid_odom.header.frame_id = "hybrid_odom"
+        hybrid_odom.header.seq = self.Keyframe_hybrid
+        hybrid_odom.child_frame_id = self.PARENT_NAME
 
         self.list_x = []
         self.list_y = []
@@ -92,31 +99,19 @@ class Subscriber(object):
         self.list_kalma_z = []
 
         # Publishers
-        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3)
+        self.pub_hibrid = rospy.Publisher("kalman/hybrid", Vector3)
         self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
         self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
         self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry)
         self.p_aruco = rospy.Publisher("time/aruco", Vector3)
-
-        self.odom_filter_pub3 = rospy.Publisher("odom_filter", Odometry)
-        self.pub_hibrid3 = rospy.Publisher('kalman/hybrid', Vector3)
-
-        # transform tf
-        tf_hybrid_to_drone = tf.TransformBroadcaster()
-        tf_hybrid_to_drone3 = tf.TransformBroadcaster()
-        
-        Keyframe = 0
-        Keyframe3 = 0
         
         rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN)
         rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco)
-
-        vec2 = Vector3()
-        vec2.x = 0
-        vec2.y = 0
-        vec2.z = 0
         
         r = rospy.Rate(60.0)
+
+        ##################################################################################
+
         while not rospy.is_shutdown():
             neural = [self.VecNeural.x, self.VecNeural.y, self.VecNeural.z]
             aruco = [self.VecAruco.x, self.VecAruco.y, self.VecAruco.z]
@@ -181,7 +176,11 @@ class Subscriber(object):
             vec.x = self.kalman.x[0]
             vec.y = self.kalman.x[1]
             vec.z = self.kalman.x[2]
+  
+            filtered = Vector3()
 
+            ##################################################################################
+            # filter pass high
             size_filter_kalman_high = 20
 
             # Filter list_kalma_x
@@ -192,7 +191,7 @@ class Subscriber(object):
                 if abs(mean_filter-vec.x) > 0.05:
                     self.list_kalma_x.append(vec.x)
                     del self.list_kalma_x[0]
-                    vec2.x = sum(self.list_kalma_x)/len(self.list_kalma_x)
+                    filtered.x = sum(self.list_kalma_x)/len(self.list_kalma_x)
 
             # Filter list_kalma_y
             if len(self.list_kalma_y) < size_filter_kalman_high:
@@ -202,7 +201,7 @@ class Subscriber(object):
                 if abs(mean_filter-vec.y) > 0.05:
                     self.list_kalma_y.append(vec.y)
                     del self.list_kalma_y[0]
-                    vec2.y = sum(self.list_kalma_y)/len(self.list_kalma_y)
+                    filtered.y = sum(self.list_kalma_y)/len(self.list_kalma_y)
 
             # Filter list_kalma_z
             if len(self.list_kalma_z) < size_filter_kalman_high:
@@ -212,17 +211,11 @@ class Subscriber(object):
                 if abs(mean_filter-vec.z) > 0.05:
                     self.list_kalma_z.append(vec.z)
                     del self.list_kalma_z[0]
-                    vec2.z = sum(self.list_kalma_z)/len(self.list_kalma_z)
-
+                    filtered.z = sum(self.list_kalma_z)/len(self.list_kalma_z)
 
             ##################################################################################
+            
             if dt_aruco < 0.1 or dt_rcnn < 0.1:
-                hybrid_odom = Odometry()
-                hybrid_odom.header.stamp = rospy.Time.now()
-                hybrid_odom.header.frame_id = "hybrid_odom"
-                hybrid_odom.header.seq = Keyframe
-                hybrid_odom.child_frame_id = self.PARENT_NAME
-
                 explicit_quat = [self.OriAruco.x, self.OriAruco.y, self.OriAruco.z, self.OriAruco.w]
                 euler = tf.transformations.euler_from_quaternion(explicit_quat)
                 # roll = euler[0]
@@ -233,57 +226,22 @@ class Subscriber(object):
                 odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
 
                 # set the position
-                hybrid_odom.pose.pose = Pose(vec, Quaternion(*odom_quat))
+                hybrid_odom.pose.pose = Pose(filtered, Quaternion(*odom_quat))
 
+                # transform tf
+                tf_hybrid_to_drone = tf.TransformBroadcaster()
                 tf_hybrid_to_drone.sendTransform(
-                              (self.kalman.x[0],self.kalman.x[1],self.kalman.x[2]), 
+                              (filtered.x,filtered.y,filtered.z), 
                               odom_quat, 
                               hybrid_odom.header.stamp, 
-                              "hybrid_odom2",
+                              "hybrid_odom",
                               self.PARENT_NAME) #world
 
-                ##################################################################################
-
-                Keyframe += 1
+                self.Keyframe_hybrid += 1
 
                 # publish the message
                 self.odom_filter_pub.publish(hybrid_odom)
-                self.pub_hibrid.publish(vec)
-
-            ##################################################################################
-            if dt_aruco < 0.1 or dt_rcnn < 0.1:
-                hybrid_odom3 = Odometry()
-                hybrid_odom3.header.stamp = rospy.Time.now()
-                hybrid_odom3.header.frame_id = "hybrid_odom3"
-                hybrid_odom3.header.seq = Keyframe3
-                hybrid_odom3.child_frame_id = self.PARENT_NAME
-
-                explicit_quat = [self.OriAruco.x, self.OriAruco.y, self.OriAruco.z, self.OriAruco.w]
-                euler = tf.transformations.euler_from_quaternion(explicit_quat)
-                # roll = euler[0]
-                # pitch = euler[1]
-                yaw = euler[2]
-
-                # # since all odometry is 6DOF we'll need a quaternion created from yaw
-                odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
-
-                # set the position
-                hybrid_odom3.pose.pose = Pose(vec2, Quaternion(*odom_quat))
-
-                tf_hybrid_to_drone3.sendTransform(
-                              (vec2.x,vec2.y,vec2.z), 
-                              odom_quat, 
-                              hybrid_odom3.header.stamp, 
-                              "hybrid_odom3",
-                              self.PARENT_NAME) #world
-
-                ##################################################################################
-
-                Keyframe3 += 1
-
-                # publish the message
-                self.odom_filter_pub3.publish(hybrid_odom3)
-                self.pub_hibrid3.publish(vec2)
+                self.pub_hibrid.publish(filtered)
 
             r.sleep()
 
@@ -316,8 +274,8 @@ class Subscriber(object):
             # rospy.logdebug("rcnn_pose.z (m): %f", neuralz_current)
 
             ##############################################################
-
-            # Filter list_x
+            # Filter Outliers
+            # Filter list_x 
             if len(self.list_x) < size_filter:
                 self.list_x.append(neuralx_current)
                 # rospy.logdebug("--------------------------------")
