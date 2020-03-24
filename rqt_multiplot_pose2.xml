@@ -201,7 +201,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>//kalman/hybrid_filtred</topic>
+                                    <topic>/kalman/hybrid_filtred</topic>
                                     <type>geometry_msgs/Vector3</type>
                                 </y_axis>
                             </axes>
