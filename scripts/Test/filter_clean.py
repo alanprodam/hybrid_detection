@@ -50,7 +50,7 @@ class Subscriber(object):
     
     def __init__(self):
         super(Subscriber, self).__init__()
-        rospy.init_node('filter_node', anonymous=True, log_level=rospy.DEBUG)
+        rospy.init_node('filter_node', anonymous=False, log_level=rospy.DEBUG)
 
         self.PARENT_NAME = rospy.get_param('~parent_name', "odom")
 
@@ -91,22 +91,13 @@ class Subscriber(object):
         self.list_kalma_z = []
 
         # Publishers
-        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3, queue_size=10)
-        self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry, queue_size=10)
-        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry, queue_size=10)
-        self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry, queue_size=10)
-
-        # transform tf
-        tf_hybrid_to_drone = tf.TransformBroadcaster()
-        tf_hybrid_to_drone3 = tf.TransformBroadcaster()
+        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3, queue_size=1)
+        self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry, queue_size=1)
+        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry, queue_size=1)
+        self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry, queue_size=1)
   
-        rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN, , queue_size=1)
-        rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco, , queue_size=1)
-
-        vec2 = Vector3()
-        vec2.x = 0
-        vec2.y = 0
-        vec2.z = 0
+        rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN, queue_size=1)
+        rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco, queue_size=1)
         
         r = rospy.Rate(60.0)
         while not rospy.is_shutdown():
@@ -174,6 +165,8 @@ class Subscriber(object):
             vec.y = self.kalman.x[1]
             vec.z = self.kalman.x[2]
 
+            filtered = Vector3()
+
             size_filter_kalman_high = 20
 
             # Filter list_kalma_x
@@ -184,7 +177,7 @@ class Subscriber(object):
                 if abs(mean_filter-vec.x) > 0.05:
                     self.list_kalma_x.append(vec.x)
                     del self.list_kalma_x[0]
-                    vec2.x = sum(self.list_kalma_x)/len(self.list_kalma_x)
+                    filtered.x = sum(self.list_kalma_x)/len(self.list_kalma_x)
 
             # Filter list_kalma_y
             if len(self.list_kalma_y) < size_filter_kalman_high:
@@ -194,7 +187,7 @@ class Subscriber(object):
                 if abs(mean_filter-vec.y) > 0.05:
                     self.list_kalma_y.append(vec.y)
                     del self.list_kalma_y[0]
-                    vec2.y = sum(self.list_kalma_y)/len(self.list_kalma_y)
+                    filtered.y = sum(self.list_kalma_y)/len(self.list_kalma_y)
 
             # Filter list_kalma_z
             if len(self.list_kalma_z) < size_filter_kalman_high:
@@ -204,7 +197,7 @@ class Subscriber(object):
                 if abs(mean_filter-vec.z) > 0.05:
                     self.list_kalma_z.append(vec.z)
                     del self.list_kalma_z[0]
-                    vec2.z = sum(self.list_kalma_z)/len(self.list_kalma_z)
+                    filtered.z = sum(self.list_kalma_z)/len(self.list_kalma_z)
 
 
 
@@ -231,22 +224,24 @@ class Subscriber(object):
                 odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
 
                 # set the position
-                hybrid_odom.pose.pose = Pose(vec2, Quaternion(*odom_quat))
-
-                tf_hybrid_to_drone3.sendTransform(
-                              (vec2.x,vec2.y,vec2.z), 
+                hybrid_odom.pose.pose = Pose(filtered, Quaternion(*odom_quat))
+        
+                # transform tf
+                tf_hybrid_to_drone = tf.TransformBroadcaster()
+                tf_hybrid_to_drone.sendTransform(
+                              (filtered.x,filtered.y,filtered.z), 
                               odom_quat, 
-                              hybrid_odom3.header.stamp, 
+                              hybrid_odom.header.stamp, 
                               "hybrid_odom",
                               self.PARENT_NAME) #world
 
                 ##################################################################################
 
-                self.Keyframe_hybrid += 1
+                self.Keyframe_hybrid+=1
 
                 # publish the message
                 self.odom_filter_pub.publish(hybrid_odom)
-                self.pub_hibrid.publish(vec2)
+                self.pub_hibrid.publish(filtered)
 
             r.sleep()
 
@@ -266,10 +261,6 @@ class Subscriber(object):
         
         if len(objArray.detections) != 0:
             # align coordinate axis X
-            # neuralx_current = (-1)*objArray.detections[0].results[0].pose.pose.position.z
-            # neuraly_current = objArray.detections[0].results[0].pose.pose.position.y
-            # neuralz_current = objArray.detections[0].results[0].pose.pose.position.x
-
             neuralx_current = (-1)*objArray.detections[0].results[0].pose.pose.position.z
             neuraly_current = (-1)*objArray.detections[0].results[0].pose.pose.position.x
             neuralz_current = objArray.detections[0].results[0].pose.pose.position.y
