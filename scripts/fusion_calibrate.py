@@ -67,13 +67,13 @@ class Subscriber(object):
 
         self.aruco_odom = Odometry()
         self.aruco_odom.header.stamp = rospy.Time.now()
-        self.aruco_odom.header.frame_id = "aruco_odom2"
+        self.aruco_odom.header.frame_id = "aruco_odom"
         self.aruco_odom.header.seq = self.Keyframe_aruco
         self.aruco_odom.child_frame_id = self.PARENT_NAME
 
         self.rcnn_odom = Odometry()
         self.rcnn_odom.header.stamp = rospy.Time.now()
-        self.rcnn_odom.header.frame_id = "rcnn_odom2"
+        self.rcnn_odom.header.frame_id = "rcnn_odom"
         self.rcnn_odom.header.seq = self.Keyframe_rcnn
         self.rcnn_odom.child_frame_id = self.PARENT_NAME
 
@@ -92,14 +92,14 @@ class Subscriber(object):
         self.list_kalma_z = []
 
         # Publishers
-        self.pub_hibrid = rospy.Publisher('kalman/hybrid2', Vector3)
-        self.odom_filter_pub = rospy.Publisher("odom_filter2", Odometry)
-        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn2", Odometry)
-        self.odom_aruco_pub = rospy.Publisher("odom_aruco2", Odometry)
+        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3)
+        self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
+        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
+        self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry)
         self.p_aruco = rospy.Publisher("time/aruco", Vector3)
 
-        self.odom_filter_pub3 = rospy.Publisher("odom_filter3", Odometry)
-        self.pub_hibrid3 = rospy.Publisher('kalman/hybrid3', Vector3)
+        self.odom_filter_pub3 = rospy.Publisher("odom_filter", Odometry)
+        self.pub_hibrid3 = rospy.Publisher('kalman/hybrid', Vector3)
 
         # transform tf
         tf_hybrid_to_drone = tf.TransformBroadcaster()
@@ -215,17 +215,11 @@ class Subscriber(object):
                     vec2.z = sum(self.list_kalma_z)/len(self.list_kalma_z)
 
 
-
-            # rospy.logdebug("------------------------")
-            # rospy.logdebug("kalman.sensor[1].x : %f", vec.x)
-            # rospy.logdebug("kalman.sensor[1].y : %f", vec.y)
-            # rospy.logdebug("kalman.sensor[1].z : %f", vec.z)
-
             ##################################################################################
             if dt_aruco < 0.1 or dt_rcnn < 0.1:
                 hybrid_odom = Odometry()
                 hybrid_odom.header.stamp = rospy.Time.now()
-                hybrid_odom.header.frame_id = "hybrid_odom2"
+                hybrid_odom.header.frame_id = "hybrid_odom"
                 hybrid_odom.header.seq = Keyframe
                 hybrid_odom.child_frame_id = self.PARENT_NAME
 
@@ -441,7 +435,7 @@ class Subscriber(object):
                           (self.VecNeural.x,self.VecNeural.y,self.VecNeural.z), 
                           odom_quat, 
                           self.rcnn_odom.header.stamp, 
-                          "rcnn_odom2",
+                          "rcnn_odom",
                           self.PARENT_NAME) #world
 
             self.Keyframe_rcnn+=1    
@@ -480,7 +474,7 @@ class Subscriber(object):
                       (self.VecAruco.x, self.VecAruco.y, self.VecAruco.z), 
                       odom_quat, 
                       self.aruco_odom.header.stamp, 
-                      "aruco_odom2",
+                      "aruco_odom",
                       self.PARENT_NAME) #world
 
         self.Keyframe_aruco+=1

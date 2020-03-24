@@ -6,6 +6,7 @@ import os
 import sys
 import cv2
 import numpy as np
+import tf
 try:
     import tensorflow as tf
 except ImportError:
@@ -20,6 +21,8 @@ from std_msgs.msg import String, Header
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from vision_msgs.msg import Detection2D, Detection2DArray, ObjectHypothesisWithPose
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Pose, Point, Quaternion, Twist
 
 # Object detection module imports
 import object_detection
@@ -74,21 +77,22 @@ config.gpu_options.per_process_gpu_memory_fraction = GPU_FRACTION
 class Detector:
 
     def __init__(self):
-        self.image_pub = rospy.Publisher("rcnn/debug_image",Image, queue_size=1)
-        self.object_pub = rospy.Publisher("rcnn/objects", Detection2DArray, queue_size=1)
+        self.image_pub = rospy.Publisher("rcnn/debug_image2",Image, queue_size=1)
+        self.object_pub = rospy.Publisher("rcnn/objects2", Detection2DArray, queue_size=1)
 
         # Create a supscriber from topic "image_raw"
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("image", Image, self.image_callback, queue_size=1, buff_size=2**24)
         self.sess = tf.Session(graph=detection_graph,config=config)
+        self.Keyframe_camera = 0
 
-        self.DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.5)
-        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.99)
-        self.DISTANCE_FOCAL = rospy.get_param('~distance_focal', 700)
+        self.DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.137)
+        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.85)
+        self.DISTANCE_FOCAL = rospy.get_param('~distance_focal', 720)
 
-        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~markerSize_RCNN'), self.DIAMETER_LANDMARCK_M, 0.5)
-        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.99)
-        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~distance_focal'), self.DISTANCE_FOCAL, 700)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~markerSize_RCNN'), self.DIAMETER_LANDMARCK_M, 0.137)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.85)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~distance_focal'), self.DISTANCE_FOCAL, 720)
 
     def image_callback(self, data): 
         objArray = Detection2DArray()

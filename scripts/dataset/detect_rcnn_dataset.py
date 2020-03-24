@@ -6,6 +6,7 @@ import os
 import sys
 import cv2
 import numpy as np
+import tf
 try:
     import tensorflow as tf
 except ImportError:
@@ -16,8 +17,12 @@ except ImportError:
 
 # ROS related imports
 import rospy
-from sensor_msgs.msg import CompressedImage
+from std_msgs.msg import String, Header
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
 from vision_msgs.msg import Detection2D, Detection2DArray, ObjectHypothesisWithPose
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Pose, Point, Quaternion, Twist
 
 # Object detection module imports
 import object_detection
@@ -28,7 +33,12 @@ from object_detection.utils import visualization_utils as vis_util
 font = cv2.FONT_HERSHEY_PLAIN
 
 # SET FRACTION OF GPU YOU WANT TO USE HERE
-GPU_FRACTION = 0.0
+GPU_FRACTION = 0.1
+
+# DISTANCE_FOCAL = 750
+# DISTANCE_FOCAL = 700
+
+MAX_NUMBER_OF_BOXES = 1
 
 ######### Set model here ############
 MODEL_NAME =  'modelo_congelado'
@@ -46,7 +56,7 @@ NUM_CLASSES = 1
 detection_graph = tf.Graph()
 with detection_graph.as_default():
     od_graph_def = tf.GraphDef()
-    with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
+    with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid: 
         serialized_graph = fid.read()
         od_graph_def.ParseFromString(serialized_graph)
         tf.import_graph_def(od_graph_def, name='')
@@ -67,38 +77,30 @@ config.gpu_options.per_process_gpu_memory_fraction = GPU_FRACTION
 class Detector:
 
     def __init__(self):
-        self.image_pub = rospy.Publisher("rcnn/debug_image/compressed",CompressedImage, queue_size=1)
-        self.object_pub = rospy.Publisher("rcnn/objects", Detection2DArray, queue_size=1)
+        self.image_pub = rospy.Publisher("rcnn/debug_image2",Image, queue_size=1)
+        self.object_pub = rospy.Publisher("rcnn/objects2", Detection2DArray, queue_size=1)
 
         # Create a supscriber from topic "image_raw"
-        self.image_sub = rospy.Subscriber("/bebop/image_raw/compressed", CompressedImage, self.image_callback, queue_size=1)
+        self.bridge = CvBridge()
+        self.image_sub = rospy.Subscriber("image", Image, self.image_callback, queue_size=1, buff_size=2**24)
         self.sess = tf.Session(graph=detection_graph,config=config)
+        self.Keyframe_camera = 0
 
-        self.DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.5)
-        self.DISTANCE_FOCAL = rospy.get_param('~distance_focal', 750)
-        self.MAX_NUMBER_OF_BOXES = rospy.get_param('~max_number_of_boxes', 1)
-        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.99)
+        self.DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.137)
+        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.85)
+        self.DISTANCE_FOCAL = rospy.get_param('~distance_focal', 720)
 
-        self.VERBOSE = False
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~markerSize_RCNN'), self.DIAMETER_LANDMARCK_M, 0.137)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.85)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~distance_focal'), self.DISTANCE_FOCAL, 720)
 
-        rospy.loginfo("%s is %f (defaut)", rospy.resolve_name('~markerSize_RCNN'), self.DIAMETER_LANDMARCK_M)
-        rospy.loginfo("%s is %f (defaut)", rospy.resolve_name('~distance_focal'), self.DISTANCE_FOCAL)
-        rospy.loginfo("%s is %f (defaut)", rospy.resolve_name('~max_number_of_boxes'), self.MAX_NUMBER_OF_BOXES)
-        rospy.loginfo("%s is %f (defaut)", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE)
-
-    def image_callback(self, data_ros):
+    def image_callback(self, data): 
         objArray = Detection2DArray()
-
-        np_arr = np.fromstring(data_ros.data, np.uint8)
-        image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR) # OpenCV >= 3.0:
-        
-        #-- Print 'X' in the center of the camera
-        image_height,image_width,channels = image.shape
-        cv2.putText(image, "X", (image_width/2, image_height/2), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
-
-        # rospy.loginfo("rows: %f",rows)
-        # rospy.loginfo("cols: %f",cols)
-        # rospy.loginfo("-------------------------")
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+        image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2RGB)
 
         # image_hsv = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
 
@@ -126,35 +128,39 @@ class Detector:
             np.squeeze(classes).astype(np.int32),
             np.squeeze(scores),
             category_index,
-            max_boxes_to_draw=self.MAX_NUMBER_OF_BOXES,
-            min_score_thresh=self.MINIMUM_CONFIDENCE,
+            max_boxes_to_draw=MAX_NUMBER_OF_BOXES,
+            min_score_thresh= self.MINIMUM_CONFIDENCE,
             use_normalized_coordinates=True,
-            line_thickness=6)
+            line_thickness=3)
 
         objArray.detections =[]
-        objArray.header=data_ros.header
+        objArray.header=data.header
 
         # Object search
         if len(objects) > 0:
             for i in range(len(objects)):
-                objArray.detections.append(self.object_predict(objects[i],data_ros.header,image_height,image_width))
-                #call fuction to return z of drone
-                #z_drone = self.distanceLandmarck(objects[i],cv_image)
+                objArray.detections.append(self.object_predict(objects[i],data.header,image_np,cv_image))
+
 
         self.object_pub.publish(objArray)
 
+        img=cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+        image_out = Image()
 
-        #### Create CompressedIamge ####
-        msg = CompressedImage()
-        #msg.header.stamp = data_ros.header.stamp
-        msg.format = "jpeg"
-        msg.data = np.array(cv2.imencode('.jpg', image)[1]).tostring()
-        # Publish new image
-        self.image_pub.publish(msg)
-        
+        #-- Print 'X' in the center of the camera
+        image_height,image_width,channels = img.shape
+        cv2.putText(img, "X", (image_width/2, image_height/2), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-    def object_predict(self,object_data, header,image_height,image_width):
+        try:
+            image_out = self.bridge.cv2_to_imgmsg(img,"bgr8")
+        except CvBridgeError as e:
+            print(e)
 
+        image_out.header = data.header
+        self.image_pub.publish(image_out)
+
+    def object_predict(self,object_data, header, image_np,image):
+        image_height,image_width,channels = image.shape
         obj = Detection2D()
         obj_hypothesis = ObjectHypothesisWithPose()
 
@@ -182,17 +188,16 @@ class Detector:
         #DIAMETER_LANDMARCK_M = 0.24 OR 0.5
         metersDiametroLandmarck = self.DIAMETER_LANDMARCK_M
 
-        #DISTANCE_FOCAL = 490
+        #DISTANCE_FOCAL = 750
         distFocus_real = self.DISTANCE_FOCAL
 
         altura = float((metersDiametroLandmarck * distFocus_real) / pixelDiametro)
 
-        if self.VERBOSE == True:
-            rospy.loginfo("--------------------------------")
-            rospy.loginfo("Diametro Marcador Real:  %f", metersDiametroLandmarck)
-            rospy.loginfo("Distancia Focal Real:    %f", distFocus_real)
-            rospy.loginfo("Diametro (pixel):        %f", pixelDiametro)
-            rospy.loginfo("Altura Drone (m):        %f", altura)
+        # rospy.loginfo("--------------------------------")
+        # rospy.loginfo("Diametro Marcador Real:  %f", metersDiametroLandmarck)
+        # # rospy.loginfo("Distancia Focal Real:    %f", distFocus_real)
+        # rospy.loginfo("Diametro (pixel):        %f", pixelDiametro)
+        # rospy.loginfo("Altura Drone (m):        %f", altura)
         ###################################
 
         pixel_x = int((obj.bbox.center.x-(image_width/2))*(-1))
@@ -205,12 +210,11 @@ class Detector:
         obj_hypothesis.pose.pose.position.z = altura
         obj.results.append(obj_hypothesis)
 
-        if self.VERBOSE == True:
-            rospy.loginfo("publish obj_hypothesis.score: %d", object_score)
-            rospy.loginfo("publish bbox.size x: %d", obj.bbox.size_x)
-            rospy.loginfo("publish bbox.size y: %d", obj.bbox.size_y)
-            rospy.loginfo("publish bbox.center x: %d", obj.bbox.center.x)
-            rospy.loginfo("publish bbox.center y: %d", obj.bbox.center.y)
+        #rospy.loginfo("publish obj_hypothesis.score: %d", object_score)
+        # rospy.loginfo("publish bbox.size x: %d", obj.bbox.size_x)
+        # rospy.loginfo("publish bbox.size y: %d", obj.bbox.size_y)
+        # rospy.loginfo("publish bbox.center x: %d", obj.bbox.center.x)
+        # rospy.loginfo("publish bbox.center y: %d", obj.bbox.center.y)
 
         return obj
 
@@ -292,7 +296,7 @@ def main(args):
         rospy.spin()
     except KeyboardInterrupt:
         print("ShutDown")
-    # cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
 
 if __name__=='__main__':
     main(sys.argv)
