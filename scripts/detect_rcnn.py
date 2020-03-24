@@ -33,10 +33,7 @@ from object_detection.utils import visualization_utils as vis_util
 font = cv2.FONT_HERSHEY_PLAIN
 
 # SET FRACTION OF GPU YOU WANT TO USE HERE
-GPU_FRACTION = 0.1
-
-# DISTANCE_FOCAL = 750
-# DISTANCE_FOCAL = 700
+GPU_FRACTION = 0.0
 
 MAX_NUMBER_OF_BOXES = 1
 
@@ -84,15 +81,16 @@ class Detector:
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("image", Image, self.image_callback, queue_size=1, buff_size=2**24)
         self.sess = tf.Session(graph=detection_graph,config=config)
-        self.Keyframe_camera = 0
 
         self.DIAMETER_LANDMARCK_M = rospy.get_param('~markerSize_RCNN', 0.137)
-        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.85)
         self.DISTANCE_FOCAL = rospy.get_param('~distance_focal', 720)
+        self.MAX_NUMBER_OF_BOXES = rospy.get_param('~max_number_of_boxes', 1.0)
+        self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.85)
 
         rospy.logdebug("%s is %s default %f", rospy.resolve_name('~markerSize_RCNN'), self.DIAMETER_LANDMARCK_M, 0.137)
-        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.85)
         rospy.logdebug("%s is %s default %f", rospy.resolve_name('~distance_focal'), self.DISTANCE_FOCAL, 720)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~max_number_of_boxes'), self.MAX_NUMBER_OF_BOXES, 1.0)
+        rospy.logdebug("%s is %s default %f", rospy.resolve_name('~minimum_confidence'), self.MINIMUM_CONFIDENCE, 0.85)
 
     def image_callback(self, data): 
         objArray = Detection2DArray()

@@ -14,16 +14,16 @@
   <arg name="marker1_frame"     default="tag_1" />
   <arg name="marker2_frame"     default="tag_2" />
   <arg name="corner_refinement" default="SUBPIX"/>
+  <arg name="nameparent"        default="camera_odom_frame"/>
 
   <arg name="markerSizeRCNN"    default="0.137"/>    <!-- in m -->
   <arg name="distancefocal"     default="720"/>  
   <arg name="maxnumberofboxes"  default="1"/>    
   <arg name="minimumconfidence" default="0.85"/>    <!-- in % -->
-  <arg name="nameparent"        default="camera_odom_frame"/>
-
+  
   <node pkg="aruco_ros" type="double" name="aruco_double">
-      <remap from="/camera_info" to="/camera/color/camera_info" />
-      <remap from="/image" to="/camera/color/image_raw" />
+      <remap from="/camera_info" to="/cv_camera/camera_info" />
+      <remap from="/image" to="/cv_camera/image_raw" />
       <param name="image_is_rectified" value="True"/>
       <param name="marker_size" value="$(arg markerSize)"/>
       <param name="marker_id1" value="$(arg marker1Id)"/>
@@ -37,7 +37,7 @@
   </node>
 
 	<node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
-      <remap from="/image" to="/camera/color/image_raw"/> <!--/cv_camera/image_rect_color or /bebop/image_raw -->
+      <remap from="/image" to="/cv_camera/image_raw"/> <!--/cv_camera/image_rect_color or /bebop/image_raw -->
       <param name="parent_name" value="$(arg nameparent)"/>
       <param name="markerSize_RCNN" value="$(arg markerSizeRCNN)"/>
       <param name="distance_focal" value="$(arg distancefocal)"/>

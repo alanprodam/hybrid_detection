@@ -52,7 +52,8 @@ class Subscriber(object):
         super(Subscriber, self).__init__()
         rospy.init_node('filter_node', anonymous=False, log_level=rospy.DEBUG)
 
-        self.PARENT_NAME = rospy.get_param('~parent_name', "odom")
+        self.PARENT_NAME = rospy.get_param('~parent_name', "alan")
+        rospy.logdebug("%s is %s default %s", rospy.resolve_name('~parent_name'), self.PARENT_NAME, "alan")
 
         self.kalman = Kalman(n_states = 3, n_sensors = 6)
         self.kalman.P *= 10
@@ -90,15 +91,18 @@ class Subscriber(object):
         self.list_kalma_y = []
         self.list_kalma_z = []
 
+        self.filtered = Vector3()
+
         # Publishers
-        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3, queue_size=1)
+        self.pub_hybrid = rospy.Publisher('kalman/hybrid_raw', Vector3, queue_size=1)
+        self.pub_hybrid_filtred = rospy.Publisher('kalman/hybrid_filtred', Vector3, queue_size=1)
         self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry, queue_size=1)
         self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry, queue_size=1)
         self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry, queue_size=1)
   
         rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN, queue_size=1)
         rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco, queue_size=1)
-        
+                
         r = rospy.Rate(60.0)
         while not rospy.is_shutdown():
             neural = [self.VecNeural.x, self.VecNeural.y, self.VecNeural.z]
@@ -165,46 +169,42 @@ class Subscriber(object):
             vec.y = self.kalman.x[1]
             vec.z = self.kalman.x[2]
 
-            filtered = Vector3()
+            # rospy.logdebug("------------------------")
+            # rospy.logdebug("kalman.sensor[1].x : %f", vec.x)
+            # rospy.logdebug("kalman.sensor[1].y : %f", vec.y)
+            # rospy.logdebug("kalman.sensor[1].z : %f", vec.z)
 
-            size_filter_kalman_high = 20
+            size_filter_kalman_high = 10
 
             # Filter list_kalma_x
             if len(self.list_kalma_x) < size_filter_kalman_high:
                 self.list_kalma_x.append(vec.x)
             else:
                 mean_filter = sum(self.list_kalma_x)/len(self.list_kalma_x)
-                if abs(mean_filter-vec.x) > 0.05:
+                if abs(mean_filter-vec.x) > 0.01:
                     self.list_kalma_x.append(vec.x)
                     del self.list_kalma_x[0]
-                    filtered.x = sum(self.list_kalma_x)/len(self.list_kalma_x)
+                    self.filtered.x = sum(self.list_kalma_x)/len(self.list_kalma_x)
 
             # Filter list_kalma_y
             if len(self.list_kalma_y) < size_filter_kalman_high:
                 self.list_kalma_y.append(vec.y)
             else:
                 mean_filter = sum(self.list_kalma_y)/len(self.list_kalma_y)
-                if abs(mean_filter-vec.y) > 0.05:
+                if abs(mean_filter-vec.y) > 0.01:
                     self.list_kalma_y.append(vec.y)
                     del self.list_kalma_y[0]
-                    filtered.y = sum(self.list_kalma_y)/len(self.list_kalma_y)
+                    self.filtered.y = sum(self.list_kalma_y)/len(self.list_kalma_y)
 
             # Filter list_kalma_z
             if len(self.list_kalma_z) < size_filter_kalman_high:
                 self.list_kalma_z.append(vec.y)
             else:
                 mean_filter = sum(self.list_kalma_z)/len(self.list_kalma_z)
-                if abs(mean_filter-vec.z) > 0.05:
+                if abs(mean_filter-vec.z) > 0.01:
                     self.list_kalma_z.append(vec.z)
                     del self.list_kalma_z[0]
-                    filtered.z = sum(self.list_kalma_z)/len(self.list_kalma_z)
-
-
-
-            # rospy.logdebug("------------------------")
-            # rospy.logdebug("kalman.sensor[1].x : %f", vec.x)
-            # rospy.logdebug("kalman.sensor[1].y : %f", vec.y)
-            # rospy.logdebug("kalman.sensor[1].z : %f", vec.z)
+                    self.filtered.z = sum(self.list_kalma_z)/len(self.list_kalma_z)
 
             ##################################################################################
             if dt_aruco < 0.1 or dt_rcnn < 0.1:
@@ -224,12 +224,12 @@ class Subscriber(object):
                 odom_quat = tf.transformations.quaternion_from_euler(0, 0, -yaw)
 
                 # set the position
-                hybrid_odom.pose.pose = Pose(filtered, Quaternion(*odom_quat))
+                hybrid_odom.pose.pose = Pose(self.filtered, Quaternion(*odom_quat))
         
                 # transform tf
                 tf_hybrid_to_drone = tf.TransformBroadcaster()
                 tf_hybrid_to_drone.sendTransform(
-                              (filtered.x,filtered.y,filtered.z), 
+                              (self.filtered.x,self.filtered.y,self.filtered.z), 
                               odom_quat, 
                               hybrid_odom.header.stamp, 
                               "hybrid_odom",
@@ -241,7 +241,11 @@ class Subscriber(object):
 
                 # publish the message
                 self.odom_filter_pub.publish(hybrid_odom)
-                self.pub_hibrid.publish(filtered)
+                self.pub_hybrid_filtred.publish(self.filtered)
+            
+            # publish the hybrid raw
+            self.pub_hybrid.publish(vec)
+            
 
             r.sleep()
 

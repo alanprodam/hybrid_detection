@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /TF1
         - /TF1/Frames1
         - /Odometry1/Covariance1
       Splitter Ratio: 0.5
@@ -27,7 +28,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: Image_CNN
 Toolbars:
   toolButtonStyle: 2
 Visualization Manager:
@@ -56,13 +57,31 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        aruco_odom:
+          Value: true
+        camera_odom_frame:
+          Value: true
+        hybrid_odom:
+          Value: true
+        rcnn_odom:
+          Value: true
+        tag_1:
+          Value: false
       Marker Scale: 1.70000005
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        camera_odom_frame:
+          aruco_odom:
+            {}
+          hybrid_odom:
+            {}
+          rcnn_odom:
+            {}
+          tag_1:
+            {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.100000001
@@ -127,7 +146,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: camera_link
+    Fixed Frame: camera_odom_frame
     Frame Rate: 30
   Name: root
   Tools:
@@ -157,7 +176,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Scale: 238.440826
+      Scale: 97.4449463
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
       X: -1.00855422
