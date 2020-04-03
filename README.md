@@ -443,4 +443,6 @@ Or record:
 
 ```
 rosbag record -O my_bagfile_1.bag /aruco_double/result_img /rcnn/debug_image2 /cv_camera/image_raw
+
+rosbag record -O oclusion1-20.bag /d435/color/image_raw /rcnn/debug_image /t265/odom/sample
 ```
