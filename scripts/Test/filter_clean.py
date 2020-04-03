@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ## Author: Alan Tavares
-## Date: August, 12, 2019
+## Date: Abril, 03, 2020
 # Purpose: Ros node to detect objects using tensorflow
 import os
 import sys
@@ -52,8 +52,8 @@ class Subscriber(object):
         super(Subscriber, self).__init__()
         rospy.init_node('filter_node', anonymous=False, log_level=rospy.DEBUG)
 
-        self.PARENT_NAME = rospy.get_param('~parent_name', "alan")
-        rospy.logdebug("%s is %s default %s", rospy.resolve_name('~parent_name'), self.PARENT_NAME, "alan")
+        self.PARENT_NAME = rospy.get_param('~parent_name', "camera_odom")
+        rospy.logdebug("%s is %s default %s", rospy.resolve_name('~parent_name'), self.PARENT_NAME, "camera_odom")
 
         self.kalman = Kalman(n_states = 3, n_sensors = 6)
         self.kalman.P *= 10

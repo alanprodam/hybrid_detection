@@ -2,20 +2,20 @@
 <launch>
 
   <!--Realsense CAM-->
-  <!-- <include file="$(find realsense2_camera)/launch/rs_t265.launch" /> -->
+  <include file="$(find realsense2_camera)/launch/rs_t265.launch" />
   <include file="$(find hybrid_detection)/launch/rs_d435.launch" />
 
   <!-- <arg name="markerId"        default="94"/> -->
   <arg name="marker1Id"         default="273"/>
   <arg name="marker2Id"         default="90"/>
-  <arg name="markerSize"        default="0.137"/>    <!-- in m -->
+  <arg name="markerSize"        default="0.095"/>    <!-- in m -->
   <arg name="dct_normalization" default="True" />
   <arg name="dct_filter_size"   default="2" />
   <arg name="marker1_frame"     default="tag_1" />
   <arg name="marker2_frame"     default="tag_2" />
   <arg name="corner_refinement" default="SUBPIX"/>
 
-  <arg name="markerSizeRCNN"    default="0.137"/>    <!-- in m -->
+  <arg name="markerSizeRCNN"    default="0.095"/>    <!-- in m -->
   <arg name="distancefocal"     default="720"/>  
   <arg name="maxnumberofboxes"  default="1"/>    
   <arg name="minimumconfidence" default="0.85"/>    <!-- in % -->
@@ -36,7 +36,7 @@
       <param name="corner_refinement" value="$(arg corner_refinement)" />
   </node>
 
-	<node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
+  <node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
       <remap from="/image" to="/camera/color/image_raw"/> <!--/cv_camera/image_rect_color or /bebop/image_raw -->
       <param name="parent_name" value="$(arg nameparent)"/>
       <param name="markerSize_RCNN" value="$(arg markerSizeRCNN)"/>
@@ -46,8 +46,6 @@
   </node>
 
   <node pkg= "hybrid_detection" name="filter" type="fusion_filter_kalman_realsense.py"  output="screen"/>
-
-<!--   <node pkg="tf" type="static_transform_publisher" name="ori_to_cam" args="0 0 0 0 0 0 /$(arg camera_link)_link /$(arg tf_prefix_camera2)_link 100"/> -->
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hybrid_detection)/rviz/rviz_config_realsense.rviz"/>
 
