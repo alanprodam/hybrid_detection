@@ -2,8 +2,9 @@
 <launch>
 
   <!--Realsense CAM-->
-  <include file="$(find realsense2_camera)/launch/rs_t265.launch" />
-  <include file="$(find hybrid_detection)/launch/rs_d435.launch" />
+  <!-- <include file="$(find hybrid_detection)/launch/rs_t265.launch" /> -->
+  <!-- <include file="$(find hybrid_detection)/launch/rs_d435.launch" /> -->
+  <include file="$(find hybrid_detection)/launch/rs_d400_and_t265.launch" />
 
   <arg name="marker1Id"         default="273"/>
   <arg name="marker2Id"         default="90"/>
@@ -13,7 +14,7 @@
   <arg name="marker1_frame"     default="tag_1" />
   <arg name="marker2_frame"     default="tag_2" />
   <arg name="corner_refinement" default="SUBPIX"/>
-  <arg name="nameparent"        default="camera_odom_frame"/>
+  <arg name="nameparent"        default="t265_odom_frame"/>
 
   <arg name="markerSizeRCNN"    default="0.095"/>    <!-- in m -->
   <arg name="distancefocal"     default="900"/>  
@@ -21,8 +22,8 @@
   <arg name="minimumconfidence" default="0.85"/>    <!-- in % -->
   
   <node pkg="aruco_ros" type="double" name="aruco_double">
-      <remap from="/camera_info" to="/cv_camera/camera_info" />
-      <remap from="/image" to="/cv_camera/image_raw" />
+      <remap from="/camera_info" to="/d435/color/camera_info" />
+      <remap from="/image" to="/d435/color/image_raw" />
       <param name="image_is_rectified" value="True"/>
       <param name="marker_size" value="$(arg markerSize)"/>
       <param name="marker_id1" value="$(arg marker1Id)"/>
@@ -36,7 +37,7 @@
   </node>
 
 	<node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
-      <remap from="/image" to="/cv_camera/image_raw"/> <!--/cv_camera/image_rect_color or /bebop/image_raw -->
+      <remap from="/image" to="/d435/color/image_raw"/> <!--/cv_camera/image_rect_color or /bebop/image_raw /D435/color/image_raw-->
       <param name="parent_name" value="$(arg nameparent)"/>
       <param name="markerSize_RCNN" value="$(arg markerSizeRCNN)"/>
       <param name="distance_focal" value="$(arg distancefocal)"/>

@@ -157,9 +157,9 @@ class Subscriber(object):
             Zarray = np.concatenate((arrayNeral, arrayAruco), axis=None)
             self.kalman.R = np.diag(Zarray)
 
-            rospy.logdebug("arrayNeral : %f", covNeural)
-            rospy.logdebug("arrayAruco : %f", covAruco)
-            rospy.logdebug("------------------------")
+            # rospy.logdebug("arrayNeral : %f", covNeural)
+            # rospy.logdebug("arrayAruco : %f", covAruco)
+            # rospy.logdebug("------------------------")
 
             self.kalman.predict()
             self.kalman.update(mat)
