@@ -4,6 +4,7 @@
   <!--Realsense CAM-->
   <!-- <include file="$(find hybrid_detection)/launch/rs_t265.launch" /> -->
   <!-- <include file="$(find hybrid_detection)/launch/rs_d435.launch" /> -->
+  
   <include file="$(find hybrid_detection)/launch/rs_d400_and_t265.launch" />
 
   <arg name="marker1Id"         default="273"/>
