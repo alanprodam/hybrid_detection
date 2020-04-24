@@ -88,19 +88,19 @@ class Subscriber(object):
         self.VecNeural_z_previous = 0
 
         # Publishers
-        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3)
-        self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry)
-        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry)
-        self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry)
-        self.p_aruco = rospy.Publisher("time/aruco", Vector3)
+        self.pub_hibrid = rospy.Publisher('kalman/hybrid', Vector3, queue_size = 1)
+        self.odom_filter_pub = rospy.Publisher("odom_filter", Odometry, queue_size = 1)
+        self.odom_rcnn_pub = rospy.Publisher("odom_rcnn", Odometry, queue_size = 1)
+        self.odom_aruco_pub = rospy.Publisher("odom_aruco", Odometry, queue_size = 1)
+        self.p_aruco = rospy.Publisher("time/aruco", Vector3, queue_size = 1)
 
         # transform tf
         tf_hybrid_to_drone = tf.TransformBroadcaster()
         
         Keyframe = 0
         
-        rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN)
-        rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco)
+        rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN, queue_size = 1)
+        rospy.Subscriber("aruco_double/pose",Pose, self.callbackPoseAruco, queue_size = 1)
         
         r = rospy.Rate(30.0)
         while not rospy.is_shutdown():
