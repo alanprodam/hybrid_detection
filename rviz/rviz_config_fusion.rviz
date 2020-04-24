@@ -30,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: Img_rcnn
+    SyncSource: ""
 Toolbars:
   toolButtonStyle: 2
 Visualization Manager:
@@ -59,31 +59,13 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        aruco_odom:
-          Value: true
-        camera_odom_frame:
-          Value: true
-        hybrid_odom2:
-          Value: true
-        rcnn_odom2:
-          Value: true
-        tag_1:
-          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        camera_odom_frame:
-          aruco_odom:
-            {}
-          hybrid_odom2:
-            {}
-          rcnn_odom2:
-            {}
-          tag_1:
-            {}
+        {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.100000001
@@ -134,7 +116,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /rcnn/debug_image2
+      Image Topic: /rcnn/debug_image
       Max Value: 1
       Median window: 5
       Min Value: 0

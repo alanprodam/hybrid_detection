@@ -14,7 +14,7 @@
   <arg name="distancefocal"     default="750"/>  
   <arg name="maxnumberofboxes"  default="1"/>    
   <arg name="minimumconfidence" default="0.99"/>    <!-- in % -->
-  <arg name="nameparent"        default="odom"/>
+  <arg name="nameparent"        default="/bebop/odom"/>
 
   <node pkg="aruco_ros" type="double" name="aruco_double">
       <remap from="/camera_info" to="/bebop/camera_info" />
@@ -31,7 +31,7 @@
       <param name="corner_refinement" value="$(arg corner_refinement)" />
   </node>
 
-  <node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn.py"  output="screen"> 
+  <node pkg= "hybrid_detection" name="detect_rcnn" type="detect_rcnn_drone.py"  output="screen"> 
     <remap from="image" to="/bebop/image_raw"/>
     <param name="parent_name" value="$(arg nameparent)"/>
     <param name="markerSize_RCNN" value="$(arg markerSizeRCNN)"/>
