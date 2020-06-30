@@ -52,7 +52,7 @@ class Subscriber(object):
         super(Subscriber, self).__init__()
         rospy.init_node('filter_node', anonymous=True, log_level=rospy.DEBUG)
 
-        self.PARENT_NAME = rospy.get_param('~parent_name', "alan")
+        self.PARENT_NAME = rospy.get_param('~parent_name', "odom_change")
 
         self.kalman = Kalman(n_states = 3, n_sensors = 6)
         self.kalman.P *= 10

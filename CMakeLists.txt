@@ -143,7 +143,7 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-catkin_install_python(PROGRAMS scripts/detect_aruco.py scripts/detect_rcnn.py scripts/detect_rcnn_compressed.py scripts/filter_kalman_test.py scripts/fusion_filter_kalman.py scripts/sub_compressed.py
+catkin_install_python(PROGRAMS scripts/detect_aruco.py scripts/detect_rcnn.py scripts/detect_rcnn_drone.py scripts/fusion_calibrate.py scripts/fusion_filter_kalman.py scripts/fusion_filter_kalman_realsense.py scripts/teleop_keyboard.py
 			DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 ###########

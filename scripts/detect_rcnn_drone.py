@@ -6,7 +6,7 @@ import os
 import sys
 import cv2
 import numpy as np
-import tf
+#import tf
 try:
     import tensorflow as tf
 except ImportError:
@@ -36,7 +36,7 @@ GPU_FRACTION = 0.0
 
 MAX_NUMBER_OF_BOXES = 1
 
-######### Set model here ############
+######### Set model here ############ modelo_congelado_landing'
 MODEL_NAME =  'modelo_congelado_drone'
 # By default models are stored in data/models/
 MODEL_PATH = os.path.join(os.path.dirname(sys.path[0]),'data','models' , MODEL_NAME)
@@ -91,7 +91,7 @@ class Detector:
         self.MAX_NUMBER_OF_BOXES = rospy.get_param('~max_number_of_boxes', 1.0)
         self.MINIMUM_CONFIDENCE = rospy.get_param('~minimum_confidence', 0.85)
 
-        self.keyframe = 0
+        self.debug = False
         self.pose_aruco_ant = 0
         self.pose_odom = Odometry()
         self.pose_aruco = Pose()
@@ -112,12 +112,12 @@ class Detector:
     def image_callback(self, data):
 
         objArray = Detection2DArray()
-        self.keyframe += 1
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
+
         image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2RGB)
 
         # image_hsv = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
@@ -184,16 +184,18 @@ class Detector:
             rcnn_value_z = objArray.detections[0].results[0].pose.pose.position.z
             true_positive_rcnn = 1
         
-        rospy.loginfo("--------------------------------")
-        rospy.loginfo("true_positive_aruco: %d", true_positive_aruco)
-        rospy.loginfo("true_positive_rcnn: %d", true_positive_rcnn)
-        rospy.loginfo("odom_value_z:  %f", round(self.pose_odom.pose.pose.position.z,1))
-        # rospy.loginfo("len(objects):  %d", len(objects))
+        if self.debug == True:
+            rospy.loginfo("--------------------------------")
+            rospy.loginfo("true_positive_aruco: %d", true_positive_aruco)
+            rospy.loginfo("true_positive_rcnn: %d", true_positive_rcnn)
+            rospy.loginfo("odom_value_z:  %f", int(self.pose_odom.pose.pose.position.z))
+            # rospy.loginfo("odom_value_z:  %f", round(self.pose_odom.pose.pose.position.z,1))
+            # rospy.loginfo("len(objects):  %d", len(objects))
 
         vec = Vector3()
         vec.x = true_positive_aruco
         vec.y = true_positive_rcnn
-        vec.z = round(self.pose_odom.pose.pose.position.z,1)
+        vec.z = int(self.pose_odom.pose.pose.position.z)
         self.pub_debug.publish(vec)
 
         try:
