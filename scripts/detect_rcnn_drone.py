@@ -118,6 +118,19 @@ class Detector:
         except CvBridgeError as e:
             print(e)
 
+        # circle center
+        #center_coordinates = (120, 50)
+
+        # Radius of circle 
+        #radius = 20
+           
+        # Blue color in BGR 
+        #color = (255, 0, 0) 
+           
+        # Line thickness of 2 px 
+        #thickness = 2
+        # hybrid_image = cv2.circle(cv_image, center_coordinates, radius, color, thickness) 
+
         image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2RGB)
 
         # image_hsv = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
@@ -265,76 +278,6 @@ class Detector:
 
         return obj
 
-    # def distFocus(self,radius,object_data,image):
-    #     image_height,image_width,channels = image.shape
-    #     obj=Detection2D()
-    #     dimensions=object_data[2]
-
-    #     obj.bbox.size_y = int((dimensions[2]-dimensions[0])*image_height)
-    #     obj.bbox.size_x = int((dimensions[3]-dimensions[1] )*image_width)
-    #     obj.bbox.center.x = int((dimensions[1] + dimensions [3])*image_height/2)
-    #     obj.bbox.center.y = int((dimensions[0] + dimensions[2])*image_width/2)
-
-    #     pixelDiametro = obj.bbox.size_x
-    #     # choose the bigest size
-    #     if(obj.bbox.size_x > obj.bbox.size_y):
-    #         pixelDiametro = obj.bbox.size_x
-    #     else:
-    #         pixelDiametro = obj.bbox.size_y
-
-    #     metersDiametro = 0.24
-    #     disMeter_real = 0.60
-
-    #     distFocus = float((pixelDiametro * disMeter_real) / metersDiametro)
-
-    #     #rospy.loginfo("distFocus: %d", distFocus)
-
-    #     distFocus_real = 490
-
-    #     altura = float((metersDiametro * distFocus_real) / pixelDiametro)
-
-    #     rospy.loginfo("--------------------------------")
-    #     rospy.loginfo("metersDiametro: %f", metersDiametro)
-    #     rospy.loginfo("distFocus_real: %f", distFocus_real)
-    #     rospy.loginfo("pixelDiametro:  %f", pixelDiametro)
-    #     rospy.loginfo("altura:         %f", altura)
-    
-    #     return distFocus_real
-
-    # def distanceLandmarck(self,object_data,image):
-    #     image_height,image_width,channels = image.shape
-    #     obj=Detection2D()
-    #     obj_hypothesis= ObjectHypothesisWithPose()
-
-    #     dimensions=object_data[2]
-
-    #     obj.bbox.size_y = int((dimensions[2]-dimensions[0])*image_height)
-    #     obj.bbox.size_x = int((dimensions[3]-dimensions[1] )*image_width)
-    #     obj.bbox.center.x = int((dimensions[1] + dimensions [3])*image_height/2)
-    #     obj.bbox.center.y = int((dimensions[0] + dimensions[2])*image_width/2)
-
-    #     pixelDiametro = obj.bbox.size_x
-    #     # choose the bigest size
-    #     if(obj.bbox.size_x > obj.bbox.size_y):
-    #         pixelDiametro = obj.bbox.size_x
-    #     else:
-    #         pixelDiametro = obj.bbox.size_y
-
-    #     #DIAMETER_LANDMARCK_M = 0.24 OR 0.5
-    #     metersDiametroLandmarck = DIAMETER_LANDMARCK_M
-
-    #     #DISTANCE_FOCAL = 490
-    #     distFocus_real = DISTANCE_FOCAL
-
-    #     altura = float((metersDiametroLandmarck * distFocus_real) / pixelDiametro)
-
-    #     rospy.loginfo("--------------------------------")
-    #     rospy.loginfo("Diametro Marcador Real:  %f", metersDiametroLandmarck)
-    #     rospy.loginfo("Distancia Focal Real:    %f", distFocus_real)
-    #     rospy.loginfo("Diametro (pixel):        %f", pixelDiametro)
-    #     rospy.loginfo("Altura Drone (m):        %f", altura)
-
-    #     return altura
 
 def main(args):
     rospy.init_node('detector_node', log_level=rospy.DEBUG)
