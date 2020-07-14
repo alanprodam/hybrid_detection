@@ -118,19 +118,6 @@ class Detector:
         except CvBridgeError as e:
             print(e)
 
-        # circle center
-        #center_coordinates = (120, 50)
-
-        # Radius of circle 
-        #radius = 20
-           
-        # Blue color in BGR 
-        #color = (255, 0, 0) 
-           
-        # Line thickness of 2 px 
-        #thickness = 2
-        # hybrid_image = cv2.circle(cv_image, center_coordinates, radius, color, thickness) 
-
         image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2RGB)
 
         # image_hsv = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
