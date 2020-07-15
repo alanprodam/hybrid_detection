@@ -42,6 +42,10 @@
 
   <node pkg= "hybrid_detection" name="filter" type="fusion_filter_kalman.py"  output="screen"/>
 
+  <!-- <node pkg= "hybrid_detection" name="debug_imag" type="debug_fusion.py"  output="screen">
+    <remap from="image" to="/bebop/image_raw"/>
+  </node> -->
+
   <!-- <node pkg="rostopic" type="rostopic" name="position" args="echo /kalman/hybrid" output="screen"/> -->
 
 

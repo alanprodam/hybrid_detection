@@ -88,12 +88,13 @@ class hybrid_img:
   def __init__(self):
 
     #-- Create a publisher
-    self.image_pub = rospy.Publisher("kalman/image_hybrid",Image, queue_size = 1)
+    self.image_pub = rospy.Publisher("kalman/image_hybrid",Image, queue_size=1)
 
     #-- Create a supscriber from topic "image_raw" and publisher to "bebop/image_aruco"
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("image", Image, self.callbackImage, queue_size=1)
-    self.pose_hybrid_sub = rospy.Subscriber('kalman/hybrid', Vector3, self.callbackHybrid, queue_size = 1)
+    self.image_sub = rospy.Subscriber("/bebop/image_raw", Image, self.callbackImage, queue_size=1)
+    #self.image_sub = rospy.Subscriber("image", Image, self.callbackImage, queue_size=1)
+    self.pose_hybrid_pub = rospy.Publisher('kalman/hybrid', Vector3, self.callbackHybrid, queue_size=1)
 
     self.Keyframe_aruco = 0
     self.vec = Vector3()
@@ -112,7 +113,6 @@ class hybrid_img:
   def callbackImage(self,data):
 
     global out, ids
-
     try:
       src_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
       (rows,cols,channels) = src_image.shape
@@ -158,7 +158,7 @@ class hybrid_img:
 
         #-- Draw the detected marker and put a reference frame over it\n",
         aruco.drawDetectedMarkers(src_image, corners)
-        #aruco.drawAxis(src_image, camera_matrix, camera_distortion, rvec, tvec, 0.3)
+        aruco.drawAxis(src_image, camera_matrix, camera_distortion, rvec, tvec, 0.3)
 
         #-- Obtain the rotation matrix tag->camera
         R_ct = np.matrix(cv2.Rodrigues(rvec)[0])
@@ -189,26 +189,36 @@ class hybrid_img:
 
         ###############################################################################
 
-        #cv2.imshow("Image-Aruco", src_image)
-        #cv2.waitKey(1)
 
+        #ospy.loginfo('Id detected!')
 
-        # since all odometry is 6DOF we'll need a quaternion created from yaw
-        odom_quat = tf.transformations.quaternion_from_euler(0, 0, yaw_camera)
-
-        self.Keyframe_aruco += 1
-
-        #rospy.loginfo('Id detected!')
-
-
-        try:
-          self.image_pub.publish(self.bridge.cv2_to_imgmsg(src_image, "bgr8"))
-        except CvBridgeError as e:
-          print(e)
-
-    else:
-      rospy.loginfo('No Id detected!')
+    #else:
+      #rospy.loginfo('No Id detected!')
       #print('No Id detected!')
+
+    # Center coordinates 
+    center_coordinates = (cols/2, rows/2) 
+      
+    # Radius of circle 
+    radius = 20
+       
+    # Blue color in BGR 
+    color = (255, 0, 0) 
+       
+    # Line thickness of 3 px 
+    thickness = 3
+       
+    # Using cv2.circle() method 
+    # Draw a circle with blue line borders of thickness of 2 px 
+    src_image = cv2.circle(src_image, center_coordinates, radius, color, thickness) 
+    
+    cv2.imshow("Image", src_image)
+    cv2.waitKey(1)
+
+    try:
+      self.image_pub.publish(self.bridge.cv2_to_imgmsg(src_image, "bgr8"))
+    except CvBridgeError as e:
+      print(e)
 
 
 ###############################################################################
