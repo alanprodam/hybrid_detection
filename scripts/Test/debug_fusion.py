@@ -2,12 +2,18 @@
 import rospy, os, sys
 import time
 import math
-import tf
 
 # numpy and OpenCV
-import numpy as np
 import cv2
 import cv2.aruco as aruco
+import numpy as np
+#import tf
+try:
+    import tensorflow as tf
+except ImportError:
+    print("unable to import TensorFlow. Is it installed?")
+    print("  source ~/tensorflow/bin/active")
+    sys.exit(1)
 
 # library to get image
 from sensor_msgs.msg import Image
@@ -16,6 +22,11 @@ from cv_bridge import CvBridge, CvBridgeError
 # library use pose mensages
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose, Point, Quaternion, Twist, Vector3
+
+# Object detection module imports
+import object_detection
+from object_detection.utils import label_map_util
+from object_detection.utils import visualization_utils as vis_util
 
 #-- Define Tag\n",
 id_to_find = 273 # 1 273
@@ -32,7 +43,7 @@ parameters =  aruco.DetectorParameters_create()
 ######### -- Get the camera calibration\n" ############
 
 #-- Get the camera calibration\n",
-CAMERA_INFO_PATH = os.path.join(os.path.dirname(sys.path[0]),'../camera_info')
+CAMERA_INFO_PATH = os.path.join(os.path.dirname(sys.path[0]),'camera_info')
 print(CAMERA_INFO_PATH)
 camera_matrix = np.loadtxt(CAMERA_INFO_PATH + '/cameraMatrix.txt', delimiter = ',')
 camera_distortion = np.loadtxt(CAMERA_INFO_PATH + '/cameraDistortion.txt', delimiter = ',')
@@ -92,9 +103,12 @@ class hybrid_img:
 
     #-- Create a supscriber from topic "image_raw" and publisher to "bebop/image_aruco"
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("/bebop/image_raw", Image, self.callbackImage, queue_size=1)
+    
+    rospy.Subscriber("/bebop/image_raw", Image, self.callbackImage, queue_size=1)
     #self.image_sub = rospy.Subscriber("image", Image, self.callbackImage, queue_size=1)
-    self.pose_hybrid_pub = rospy.Publisher('kalman/hybrid', Vector3, self.callbackHybrid, queue_size=1)
+    
+    rospy.Subscriber('kalman/hybrid', Vector3, self.callbackHybrid, queue_size=1)
+    #rospy.Subscriber("rcnn/objects", Detection2DArray, self.callbackPoseRCNN, queue_size = 1)
 
     self.Keyframe_aruco = 0
     self.vec = Vector3()
@@ -189,15 +203,14 @@ class hybrid_img:
 
         ###############################################################################
 
-
-        #ospy.loginfo('Id detected!')
+        #rospy.loginfo('Id detected!')
 
     #else:
       #rospy.loginfo('No Id detected!')
       #print('No Id detected!')
 
     # Center coordinates 
-    center_coordinates = (cols/2, rows/2) 
+    center_coordinates = (cols*self.vec.x, rows*self.vec.y) 
       
     # Radius of circle 
     radius = 20
