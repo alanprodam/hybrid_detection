@@ -206,11 +206,19 @@ class hybrid_img:
         #rospy.loginfo('Id detected!')
 
     #else:
-      #rospy.loginfo('No Id detected!')
-      #print('No Id detected!')
+    #rospy.loginfo('No Id detected!')
+    #print('No Id detected!')
+    foco = 527
+    x = (foco*self.vec.x)/self.vec.z
+    y = (foco*self.vec.y)/self.vec.z
+
+    X = x+(cols/2)
+    Y = y+(rows/2)
+    print(X)
 
     # Center coordinates 
-    center_coordinates = (cols*self.vec.x, rows*self.vec.y) 
+    center_coordinates = (int(X), int(Y))
+    #center_coordinates = (cols/2, rows/2) 
       
     # Radius of circle 
     radius = 20
