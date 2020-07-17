@@ -104,7 +104,7 @@ class hybrid_img:
     #center_coordinates = (cols/2, rows/2) 
       
     # Radius of circle 
-    radius = 10
+    radius = 15
        
     # Blue color in BGR 
     color = (0, 0, 255) 
@@ -117,7 +117,7 @@ class hybrid_img:
     if(self.status_hybrid == True):
       src_image = cv2.circle(src_image, center_coordinates, radius, color, thickness)
     else:
-      print("false!")
+      #print("false!")
 
     self.status_hybrid = False
     #cv2.imshow("Image", src_image)
