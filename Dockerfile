@@ -5,108 +5,97 @@ ENV TZ=America/Sao_Paulo
 
 ENV http_proxy $HTTP_PROXY
 ENV https_proxy $HTTP_PROXY
-ENV FLASK_ENV=development
 
-ARG INSTALL_DIR=/opt/intel/openvino_2021
-ARG TEMP_DIR=/tmp/openvino_installer
+ARG PYTHON_VERSION=3.6
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    repo \
-    build-essential \
-    autoconf \
-    libtool  \
-    libavahi-client-dev \
-    libavcodec-dev \
-    libavformat-dev \
-    libswscale-dev \
-    libncurses5-dev \
-    mplayer \
-    wget \
-    x11-apps \
-    net-tools \
-    iputils-ping \
-    curl \
-    tmux \
-    vim \
-    htop \
-    nano \
-    ca-certificates \
-    cpio \
-    sudo \
-    lsb-release && \
-    rm -rf /var/lib/apt/lists/*
+# ADD . /Letmein_ws
+# # WORKDIR  /Letmein_ws
 
-# RUN mkdir -p $TEMP_DIR && cd $TEMP_DIR
+# Needed for string substitution
+SHELL ["/bin/bash", "-c"]
 
-# RUN cd $TEMP_DIR && \
-#     curl -sc /tmp/cookie "https://drive.google.com/uc?export=download&id=1qsXBl66EankeF7aczjBAkC4DqLRXf9O5" > /dev/null && \
-#     curl -Lb /tmp/cookie "https://drive.google.com/uc?export=download&confirm=$(awk '/_warning_/ {print $NF}' /tmp/cookie)&id=1qsXBl66EankeF7aczjBAkC4DqLRXf9O5" -o l_openvino_toolkit_p_2021.2.185.tgz
-
-# RUN cd $TEMP_DIR && tar xf l_openvino_toolkit_p_2021.2.185.tgz && \
-#     cd l_openvino_toolkit_p_2021.2.185 && \
-#     sed -i 's/decline/accept/g' silent.cfg && \
-#     ./install.sh -s silent.cfg && \
-#     rm -rf $TEMP_DIR
-
-#COPY 6379.conf /etc/redis/redis.conf
 COPY requirements.txt /
+# COPY install_ros.sh /
 WORKDIR  /
 
-# Install python dependencies
-RUN apt-get -y install python3-dev \
-    python3-pip && \
-    pip3 install --upgrade pip && \
+# Install all dependencies for OpenCV
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa
+
+# Install all dependencies for OpenCV
+RUN apt-get -y update -qq --fix-missing && \
+    apt-get -y install --no-install-recommends \
+        wget \
+        python3 \
+        python3-dev \
+        $( [ ${PYTHON_VERSION%%.*} -ge 3 ] && echo "python${PYTHON_VERSION%%.*}-distutils" ) \
+        xcb \
+        x11-apps \
+        net-tools \
+        iputils-ping \
+        curl \
+        tmux \
+        vim \
+        htop \
+        nano \
+        ffmpeg \
+        libtbb2 \
+        apt-utils \
+        qt5-default \
+        libopenblas-base \
+        libpng-dev \
+        libgstreamer1.0 \
+        libgstreamer-plugins-base1.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender1 \
+        ca-certificates \
+        debian-keyring \
+        debian-archive-keyring \
+        git \
+        repo \
+        build-essential \
+        autoconf \
+        libtool \
+        libavahi-client-dev \
+        libavcodec-dev \
+        libavformat-dev \
+        libswscale-dev \
+        libncurses5-dev \
+        mplayer \
+        cpio 
+
+# install python dependencies
+RUN wget https://bootstrap.pypa.io/get-pip.py --progress=bar:force:noscroll --no-check-certificate && \
+    python3 get-pip.py && \
+    rm get-pip.py && \
+    apt-get -y install python3-dev \
+        python3-pip
+    
+# Install OpenCV
+RUN pip3 install --upgrade pip && \
     pip3 install -r requirements.txt
 
-
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     git \
-#     repo \
-#     build-essential \
-#     autoconf \
-#     libtool  \
-#     libavahi-client-dev \
-#     libavcodec-dev \
-#     libavformat-dev \
-#     libswscale-dev \
-#     libncurses5-dev \
-#     mplayer \
-#     wget \
-#     x11-apps \
-#     net-tools \
-#     iputils-ping \
-#     curl \
-#     tmux \
-#     vim \
-#     htop \
-#     nano \
-#     ca-certificates \
-#     cpio \
-#     sudo \
-#     lsb-release && \
-#     rm -rf /var/lib/apt/lists/*
+# cleaning
+RUN apt-get autoremove -y && \
+    apt-get clean
 
 
 ENV PYTHONIOENCODING=UTF-8
 
+
 # update ros repository
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
-RUN curl -sSL 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xC1CF6E31E6BADE8868B172B4F42ED6FBAB17C654' | sudo apt-key add -
-RUN apt-get update
+RUN curl -sSL 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xC1CF6E31E6BADE8868B172B4F42ED6FBAB17C654' | apt-key add -
 
-# Desktop Install: ROS, rqt, rviz, and robot-generic libraries
-RUN apt install -y ros-melodic-desktop
+RUN apt-get -y update -qq --fix-missing && \
+    apt-get -y install ros-melodic-desktop \
+    ros-melodic-joy \
+    ros-melodic-octomap-ros \
+    ros-melodic-aruco \
+    python3-wstool \
+    python3-catkin-tools
 
 RUN echo "source /opt/ros/melodic/setup.bash" | tee -a /root/.bashrc
-RUN echo "source ~/.bashrc"
-
-# enables you to easily download many source trees for ROS packages with one command
-RUN apt-get install -y python-rosinstall rosdep python-rosinstall-generator python-wstool
-
-# Initialise rosdep
-RUN rosdep init
-RUN rosdep update
-
-
