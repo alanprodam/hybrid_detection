@@ -70,10 +70,14 @@ RUN apt-get -y update -qq --fix-missing && \
 RUN wget https://bootstrap.pypa.io/get-pip.py --progress=bar:force:noscroll --no-check-certificate && \
     python3 get-pip.py && \
     rm get-pip.py && \
-    apt-get -y install python3-dev \
-        python3-pip
+    apt-get -y install python-dev python-pip \
+        python3-dev python3-pip
+
+# Install python2 dependencies
+RUN pip2 install --upgrade pip && \
+    pip2 install -r requirements.txt
     
-# Install OpenCV
+# Install python3 dependencies
 RUN pip3 install --upgrade pip && \
     pip3 install -r requirements.txt
 
