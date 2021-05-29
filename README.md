@@ -62,8 +62,6 @@ sudo apt install git repo build-essential autoconf libtool python python3 libava
 You must install and upgrade python with pip upgrade:
 
 ```
-sudo apt install git repo build-essential autoconf libtool python python3 libavahi-client-dev libavcodec-dev libavformat-dev libswscale-dev libncurses5-dev mplayer
-
 sudo apt-get install python-dev python-pip python3-dev python3-pip
 
 sudo -H pip2 install -U pip numpy
@@ -116,8 +114,6 @@ bebop_autonomy is a ROS driver for Parrot Bebop 1.0 and 2.0 drones (quadrocopter
 mkdir -p ~/landing_ws/src && cd ~/landing_ws
 catkin init
 git clone https://github.com/AutonomyLab/bebop_autonomy.git src/bebop_autonomy
-git clone https://github.com/Kukanani/vision_msgs.git
-git clone https://github.com/alanprodam/aruco_ros.git
 ```
 
 ### Update rosdep database and install dependencies (including parrot_arsdk)
@@ -137,6 +133,13 @@ catkin build
 ```
 cd ~/landing_ws/src
 git clone https://github.com/alanprodam/hybrid_detection.git
+```
+
+### Additional dependencies ###
+```
+cd ~/src
+git clone https://github.com/Kukanani/vision_msgs.git
+git clone https://github.com/alanprodam/aruco_ros.git
 ```
 
 ```
@@ -358,19 +361,19 @@ cd ~/landing_ws
 
 source devel/setup.bash
 
-sphinx ~/landing_ws/src/control_bebop_teleop/world/aruco.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
+sphinx ~/landing_ws/src/hybrid_detection/world/aruco.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
 ```
 
 If you wanna use another world `svo_world.world`:
 
 ```
-sphinx ~/landing_ws/src/control_bebop_teleop/world/svo_world.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
+sphinx ~/landing_ws/src/hybrid_detection/world/svo_world.world /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
 ```
 
 If you wanna find and change the Big_box with ArUco, if you do not have the big_box, move the file to `.gazebo/models/...`:
 
 ```
-/hybrid_detection/src/control_bebop_teleop/world/big_box
+/landing_ws/src/hybrid_detection/world/big_box
 
 ~/.gazebo/models/big_box
 ```
